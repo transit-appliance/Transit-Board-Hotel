@@ -1,15 +1,75 @@
 <?xml version="1.0"?>
 <!DOCTYPE Map>
-<Map bgcolor="#ffffffff" >
-  <!-- TriMet Spatialite file in same dir as this -->
-  <Datasource name="TriMet">
-    <Parameter name="type">sqlite</Parameter>
-    <Parameter name="file">trimet</Parameter>
-  </Datasource>
+<Map bgcolor="rgba(0,0,0,0)" srs="+init=epsg:3857">
+  <!--
+   trimet.xml: Mapnik style file for the TriMet network overlay
 
-  <Layer name="Rail Lines">
-    <Datasource base="TriMet">
-      <Parameter name="table">tm_rail_lines</Parameter>
+   Copyright 2011 Portland Transport
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+   Authors:
+   Matt Conway: main code
+
+  -->
+  <Style name="RailLines">
+    <!-- MAX Red Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'R'</Filter>
+      <LineSymbolizer>
+	<CssParameter name="stroke">rgba(255,0,0,255)</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+
+    <!-- MAX Green Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'G'</Filter>
+      <LineSymbolizer>
+	<CssParameter name="stroke">rgba(0,255,0,255)</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+
+    <!-- MAX Blue Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'B'</Filter>
+      <LineSymbolizer>
+	<CssParameter name="stroke">rgba(0,0,255,255)</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+
+    <!-- MAX Yellow Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'Y'</Filter>
+      <LineSymbolizer>
+	<!-- TODO: too light? -->
+	<CssParameter name="stroke">#ffffc0</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+  </Style>
+
+  <Layer name="Rail Lines" srs="+init=epsg:2269">
+    <StyleName>RailLines</StyleName>
+    <Datasource>
+      <Parameter name="type">shape</Parameter>
+      <Parameter name="file">tm_rail_lines</Parameter>
     </Datasource>
   </Layer>
 </Map>
