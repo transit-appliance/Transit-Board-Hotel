@@ -1,0 +1,84 @@
+<html>
+<head>
+	<script type="text/javascript" src="assets/js/jquery-1.5.1.min.js"></script>
+	<script type="text/javascript" src="assets/js/trArrUtilities.js"></script>
+	<script>
+		
+			function parse_query(qs) {
+			var q = (typeof qs === 'string'?qs:window.location.search);
+			var params = {};
+			jQuery.each(q.match(/^\??(.*)$/)[1].split('&'),function(i,p){
+				p = unescape(p).replace(/\+/g,' ').replace(/\]/g,'');
+				p = p.split('=');
+				var keys = p[0].split('[');
+				var value = p[1];
+				var depth = keys.length;
+				if (depth == 1) {
+					// actually shouldn't happen, should always have at least two levels
+					if (params[keys[0]] == undefined) {
+						params[keys[0]] = {};
+					}
+					params[keys[0]][value] = true;
+				}
+				if (depth == 2) {
+					if (params[keys[0]] == undefined) {
+						params[keys[0]] = {};
+					}
+					if (params[keys[0]][keys[1]] == undefined) {
+						params[keys[0]][keys[1]] = {};
+					}
+					params[keys[0]][keys[1]][value] = true;
+				}
+				if (depth == 3) {
+					if (params[keys[0]] == undefined) {
+						params[keys[0]] = {};
+					}
+					if (params[keys[0]][keys[1]] == undefined) {
+						params[keys[0]][keys[1]] = {};
+					}
+					if (params[keys[0]][keys[1]][keys[2]] == undefined) {
+						params[keys[0]][keys[1]][keys[2]] = {};
+					}
+					params[keys[0]][keys[1]][keys[2]][value] = true;
+				}
+			});
+			return params;
+		}
+		
+		var query_params = parse_query();
+		
+		var options = {};
+		for (var option in query_params.option) {
+			for (var value in query_params.option[option]) {
+				options[option] = value;
+			}
+		}
+		
+		var left_border = options.left || 0;
+		var bottom_border = options.bottom || 0;
+		var top_border = options.top || 0;
+		var right_border = options.right || 0;
+		var application = "tbdinner.html"+window.location.search;
+		
+		$(document).ready(function(){
+			
+	
+			$("#container").css('border-style','solid');
+			$("#container").css('border-color','black');
+			$("#container").css('border-left-width',left_border);
+			$("#container").css('border-top-width',top_border);
+			$("#container").css('border-right-width',right_border);
+			$("#container").css('border-bottom-width',bottom_border);
+			$("#container").css('width',($(window).width() - left_border - right_border));
+			$("#container").css('height',($(window).height() - top_border - bottom_border));
+			$("#frame").attr('src',application);
+
+		});
+
+	</script>
+</head>
+<body style="margin: 0px; padding: 0px; background-color: black">
+	<div id="container" style="margin: 0px; padding: 0px; overflow: hidden">
+		<iframe id="frame" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" style="width: 100%; height: 100%"></iframe>
+	</div>
+</body>

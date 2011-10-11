@@ -1,0 +1,19 @@
+h1 { margin-left: 240px; } 
+
+#tb_top {
+	background-image: url(/assets/images/psulogo.png);
+  background-repeat: no-repeat;
+  background-position: 20px 20px;
+}
+
+#tb_clock { background-color: #6A7F10;  }
+#tb_ticker { background-color: #D4D97E; }
+
+tr.odd { background-color: #6A7F10; color: #FFFFFF }
+tr.even { background-color: #b4b95E; color: #FFFFFF }
+
+#tb_opaque {  background-color: #b4b95E; }
+
+
+
+

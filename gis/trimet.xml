@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE Map>
+<Map bgcolor="#ffffffff" >
+  <!-- TriMet Spatialite file in same dir as this -->
+  <Datasource name="TriMet">
+    <Parameter name="type">sqlite</Parameter>
+    <Parameter name="file">trimet</Parameter>
+  </Datasource>
+
+  <Layer name="Rail Lines">
+    <Datasource base="TriMet">
+      <Parameter name="table">tm_rail_lines</Parameter>
+    </Datasource>
+  </Layer>
+</Map>

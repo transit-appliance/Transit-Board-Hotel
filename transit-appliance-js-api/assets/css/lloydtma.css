@@ -1,0 +1,18 @@
+
+
+#tb_top {
+
+}
+
+#tb_clock { background-color: #7FB439;  }
+#tb_ticker { background-color: #D4D97E; }
+
+tr.odd { background-color: #7FB439; }
+tr.even { background-color: #D1E293; }
+
+#tb_opaque {  background-color: #D1E293; }
+
+
+
+
+
