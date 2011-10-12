@@ -72,9 +72,13 @@ class RenderThread:
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         self.tileproj = GoogleProjection(maxZoom+1)
 
+        # For testing if tiles are blank
+        blankTile = mapnik.Image(256, 256)
+        blankTile.background = mapnik.Color('rgba(0,0,0,0)')
+        self.blankTileStr = blankTile.tostring('png')
+
 
     def render_tile(self, tile_uri, x, y, z):
-
         # Calculate pixel positions of bottom-left & top-right
         p0 = (x * 256, (y + 1) * 256)
         p1 = ((x + 1) * 256, y * 256)
@@ -100,8 +104,15 @@ class RenderThread:
         # Render image with default Agg renderer
         im = mapnik.Image(render_size, render_size)
         mapnik.render(self.m, im)
-        im.save(tile_uri, 'png256')
-
+        
+        # Ensure the tile isn't blank before saving
+        if not im.tostring('png') == self.blankTileStr:
+            im.save(tile_uri, 'png256')
+            # Return True if the tile was saved
+            return True
+        else:
+            return False
+    
 
     def loop(self):
         while True:
@@ -117,17 +128,21 @@ class RenderThread:
             if os.path.isfile(tile_uri):
                 exists= "exists"
             else:
-                self.render_tile(tile_uri, x, y, z)
-            bytes=os.stat(tile_uri)[6]
-            empty= ''
-            if bytes == 103:
-                empty = " Empty Tile "
-            self.printLock.acquire()
-            print name, ":", z, x, y, exists, empty
-            self.printLock.release()
+                if self.render_tile(tile_uri, x, y, z):
+                    bytes=os.stat(tile_uri)[6]
+                    empty= ''
+                    if bytes == 103:
+                        empty = " Empty Tile "
+                    self.printLock.acquire()
+                    print name, ":", z, x, y, exists, empty
+                    self.printLock.release()
+                
+                else:
+                    self.printLock.acquire()
+                    print name, ":", z, x, y, ' not saved: empty'
+                    self.printLock.release()
+
             self.q.task_done()
-
-
 
 def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", num_threads=NUM_THREADS, tms_scheme=False):
     print "render_tiles(",bbox, mapfile, tile_dir, minZoom,maxZoom, name,")"
@@ -218,6 +233,6 @@ if __name__ == "__main__":
 
     render_tiles(bbox, mapfile, tile_dir, 0, 5, "Portland")
 
-    minZoom = 10
+    minZoom = 1
     maxZoom = 18
     render_tiles(bbox, mapfile, tile_dir, minZoom, maxZoom)
