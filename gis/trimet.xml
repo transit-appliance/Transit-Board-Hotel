@@ -180,6 +180,20 @@
 	<CssParameter name="stroke-dasharray">2,6</CssParameter>
       </LineSymbolizer>
     </Rule>
+    
+    <!-- Streetcar -->
+    <Rule>
+      <Filter>[type] = 'SC' and [status] = 'Existing'</Filter>
+      <!-- Level 14 and above -->
+      <MaxScaleDenominator>50000</MaxScaleDenominator>
+      <LineSymbolizer>
+      	<!-- Orange? Don't want to confuse with Milwaukie MAX -->
+	<CssParameter name="stroke">#ff3300</CssParameter>
+	<!-- 4 vs 7 for all the rest -->
+	<CssParameter name="stroke-width">4</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+    </Rule>
   </Style>
 
   <Layer name="Rail Lines" srs="+init=epsg:2269">
