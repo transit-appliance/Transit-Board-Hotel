@@ -63,6 +63,104 @@
 	<CssParameter name="stroke-linejoin">round</CssParameter>
       </LineSymbolizer>
     </Rule>
+
+    <!-- MAX Blue/Red Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'BR'</Filter>
+      <!-- Blue -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#0000ff</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+      <!-- Red -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#ff0000</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">5,5</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+
+    <!-- MAX Green/Yellow Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'GY'</Filter>
+      <!-- Green -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#00ff00</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+      <!-- Yellow -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#ffffc0</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">5,5</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+
+    <!-- MAX Blue/Green/Red Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'BGR'</Filter>
+      <!-- Blue -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#0000ff</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+      <!-- Red -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#ff0000</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">10,5</CssParameter>
+      </LineSymbolizer>
+      <!-- Green -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#00ff00</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<!-- this will likely make the overlayed dashes make more sense:
+	     Bottom layer - solid: ===============
+	     Middle layer - dash : XXXXXXXXXX
+	     Top layer - dash    : *****
+	-->
+	<CssParameter name="stroke-dasharray">5,10</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+
+    <!-- MAX Blue/Green/Red/Yellow Line -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'BGRY'</Filter>
+      <!-- Blue -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#0000ff</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+      <!-- Red -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#ff0000</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">6,2</CssParameter>
+      </LineSymbolizer>
+      <!-- Green -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#00ff00</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">4,4</CssParameter>
+      </LineSymbolizer>
+      <!-- Yellow -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#ffffc0</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">2,6</CssParameter>
+      </LineSymbolizer>
+    </Rule>
   </Style>
 
   <Layer name="Rail Lines" srs="+init=epsg:2269">
