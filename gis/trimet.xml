@@ -81,6 +81,25 @@
 	<CssParameter name="stroke-dasharray">5,5</CssParameter>
       </LineSymbolizer>
     </Rule>
+    
+    <!-- MAX Blue/Green Line 
+    	present on the approach to Gateway TC from the east, easy to overlook. Issues 1 and 9 -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'BG'</Filter>
+      <!-- Blue -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#0000ff</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+      <!-- Red -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#00ff00</CssParameter>
+	<CssParameter name="stroke-width">3.5</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">5,5</CssParameter>
+      </LineSymbolizer>
+    </Rule>
 
     <!-- MAX Green/Yellow Line -->
     <Rule>
