@@ -58,7 +58,7 @@
       <Filter>[type] = 'MAX' and [line] = 'Y'</Filter>
       <LineSymbolizer>
 	<!-- TODO: too light? -->
-	<CssParameter name="stroke">#ffffc0</CssParameter>
+	<CssParameter name="stroke">#e5e200</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
       </LineSymbolizer>
@@ -112,7 +112,7 @@
       </LineSymbolizer>
       <!-- Yellow -->
       <LineSymbolizer>
-	<CssParameter name="stroke">#ffffc0</CssParameter>
+	<CssParameter name="stroke">#e5e200</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
 	<CssParameter name="stroke-dasharray">15,15</CssParameter>
@@ -174,7 +174,7 @@
       </LineSymbolizer>
       <!-- Yellow -->
       <LineSymbolizer>
-	<CssParameter name="stroke">#ffffc0</CssParameter>
+	<CssParameter name="stroke">#e5e200</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
 	<CssParameter name="stroke-dasharray">2,6</CssParameter>
