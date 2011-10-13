@@ -15,7 +15,7 @@ $(document).ready(function () {
     var map = new L.Map(
 	'map',
 	{zoomControl: false})
-	.setView(new L.LatLng(45.5240, -122.6810), 0)
+	.setView(new L.LatLng(45.5240, -122.6810), 14)
 	.addLayer(baseLayer)
 	.addLayer(transitLayer);
 });
