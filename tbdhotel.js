@@ -12,9 +12,10 @@ $(document).ready(function () {
     var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
 				       {maxZoom: 18});
     
+    // add this back
+    //{zoomControl: false})
     var map = new L.Map(
-	'map',
-	{zoomControl: false})
+	'map')
 	.setView(new L.LatLng(45.5240, -122.6810), 14)
 	.addLayer(baseLayer)
 	.addLayer(transitLayer);
