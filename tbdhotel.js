@@ -9,7 +9,7 @@ $(document).ready(function () {
     var baseLayer = new L.TileLayer(tileUrl, 
 				    {maxZoom: 18, attribution: tileAttr});
 
-    var transitLayer = new L.TileLayer("http://localhost:8000/gis/trimetTiles/{z}/{x}/{y}.png",
+    var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
 				       {maxZoom: 18});
     
     var map = new L.Map(
