@@ -196,11 +196,39 @@
     </Rule>
   </Style>
 
+  <Style name="RailStops">
+    <Rule>
+      <!-- MAX -->
+      <Filter>[type] = 'MAX' and [status] = 'Existing'</Filter>
+      <!-- zoom 13 -->
+      <MaxScaleDenominator>100000</MaxScaleDenominator>
+      <PointSymbolizer width="15" height="15" file="img/stop15.png" 
+		       type="png"/>
+    </Rule>
+
+    <!-- Streetcar -->
+    <Rule>
+      <Filter>[type] = 'SC' and [status] = 'Existing'</Filter>
+      <!-- zoom 15 -->
+      <MaxScaleDenominator>25000</MaxScaleDenominator>
+      <PointSymbolizer file="img/stop9.png" width="9" height="9" 
+		       type="png"/>
+    </Rule>
+  </Style>
+
   <Layer name="Rail Lines" srs="+init=epsg:2269">
     <StyleName>RailLines</StyleName>
     <Datasource>
       <Parameter name="type">shape</Parameter>
       <Parameter name="file">tm_rail_lines</Parameter>
+    </Datasource>
+  </Layer>
+
+  <Layer name="Rail Stops" srs="+init=epsg:2269">
+    <StyleName>RailStops</StyleName>
+    <Datasource>
+      <Parameter name="type">shape</Parameter>
+      <Parameter name="file">tm_rail_stops</Parameter>
     </Datasource>
   </Layer>
 </Map>
