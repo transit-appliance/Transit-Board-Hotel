@@ -233,6 +233,13 @@ if __name__ == "__main__":
 
     render_tiles(bbox, mapfile, tile_dir, 0, 5, "Portland")
 
-    minZoom = 1
-    maxZoom = 18
+    try:
+        minZoom = int(os.environ['MIN_ZOOM'])
+    except KeyError:
+        minZoom = 1
+    try:
+        maxZoom = int(os.environ['MAX_ZOOM'])
+    except KeyError:
+        maxZoom = 18
+
     render_tiles(bbox, mapfile, tile_dir, minZoom, maxZoom)
