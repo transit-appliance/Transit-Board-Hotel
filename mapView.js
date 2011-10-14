@@ -40,7 +40,8 @@ $(document).ready(function () {
 	var url = window.location.href.replace(window.location.search, '') +
 	    '?lon=' + map.getCenter().lng +
 	    '&lat=' + map.getCenter().lat +
-	    '&zoom=' + map.getZoom();
+	    '&zoom=' + map.getZoom() +
+	    '&mapId=' + mapId;
 
 	// update the href and the link text
 	$('#link').attr('href', url).text(url);
