@@ -88,7 +88,7 @@
 	<CssParameter name="stroke">#ff0000</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">15,15</CssParameter>
+	<CssParameter name="stroke-dasharray">30,30</CssParameter>
       </LineSymbolizer>
     </Rule>
 
@@ -112,7 +112,7 @@
 	<CssParameter name="stroke">#ff0000</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">15,15</CssParameter>
+	<CssParameter name="stroke-dasharray">30,30</CssParameter>
       </LineSymbolizer>
     </Rule>
 
@@ -134,7 +134,7 @@
 	<CssParameter name="stroke">#e5e200</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">15,15</CssParameter>
+	<CssParameter name="stroke-dasharray">7,7</CssParameter>
       </LineSymbolizer>
     </Rule>
 
@@ -156,7 +156,8 @@
 	<CssParameter name="stroke">#e5e200</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">15,15</CssParameter>
+	<!-- it differs from the others because the segment is short -->
+	<CssParameter name="stroke-dasharray">20,20</CssParameter>
       </LineSymbolizer>
     </Rule>
     
@@ -175,7 +176,7 @@
 	<CssParameter name="stroke">#00ff00</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">15,15</CssParameter>
+	<CssParameter name="stroke-dasharray">30,30</CssParameter>
       </LineSymbolizer>
     </Rule>
 
@@ -194,7 +195,7 @@
 	<CssParameter name="stroke">#ff0000</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">30,15</CssParameter>
+	<CssParameter name="stroke-dasharray">60,30</CssParameter>
       </LineSymbolizer>
       <!-- Green -->
       <LineSymbolizer>
@@ -206,7 +207,7 @@
 	     Middle layer - dash : XXXXXXXXXX
 	     Top layer - dash    : *****
 	-->
-	<CssParameter name="stroke-dasharray">15,30</CssParameter>
+	<CssParameter name="stroke-dasharray">30,60</CssParameter>
       </LineSymbolizer>
     </Rule>
 
@@ -224,21 +225,21 @@
 	<CssParameter name="stroke">#ff0000</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">6,2</CssParameter>
+	<CssParameter name="stroke-dasharray">12,4</CssParameter>
       </LineSymbolizer>
       <!-- Green -->
       <LineSymbolizer>
 	<CssParameter name="stroke">#00ff00</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">4,4</CssParameter>
+	<CssParameter name="stroke-dasharray">8,8</CssParameter>
       </LineSymbolizer>
       <!-- Yellow -->
       <LineSymbolizer>
 	<CssParameter name="stroke">#e5e200</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
-	<CssParameter name="stroke-dasharray">2,6</CssParameter>
+	<CssParameter name="stroke-dasharray">4,12</CssParameter>
       </LineSymbolizer>
     </Rule>
     
