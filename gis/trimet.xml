@@ -25,7 +25,7 @@
   <Style name="RailLines">
     <!-- MAX Red Line -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'R'</Filter>
+      <Filter>[type] = 'MAX' and [line] = 'R' and [status] = 'Existing'</Filter>
       <LineSymbolizer>
 	<CssParameter name="stroke">rgba(255,0,0,255)</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
@@ -35,7 +35,7 @@
 
     <!-- MAX Green Line -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'G'</Filter>
+      <Filter>[type] = 'MAX' and [line] = 'G' and [status] = 'Existing'</Filter>
       <LineSymbolizer>
 	<CssParameter name="stroke">rgba(0,255,0,255)</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
@@ -45,7 +45,7 @@
 
     <!-- MAX Blue Line -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'B'</Filter>
+      <Filter>[type] = 'MAX' and [line] = 'B' and [status] = 'Existing'</Filter>
       <LineSymbolizer>
 	<CssParameter name="stroke">rgba(0,0,255,255)</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
@@ -55,7 +55,7 @@
 
     <!-- MAX Yellow Line -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'Y'</Filter>
+      <Filter>[type] = 'MAX' and [line] = 'Y' and [status] = 'Existing'</Filter>
       <LineSymbolizer>
 	<!-- TODO: too light? -->
 	<CssParameter name="stroke">#e5e200</CssParameter>
@@ -64,9 +64,19 @@
       </LineSymbolizer>
     </Rule>
 
-    <!-- MAX Blue/Red Line -->
+
+    <!-- Blue/Red and Green/Yellow lines are duplicated because they have 
+	 couplets that are hidden at 13 and below -->
+    <!-- MAX Blue/Red Line, couplets hidden -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'BR'</Filter>
+      <Filter>
+	[type] = 'MAX' and [line] = 'BR' 
+	and [status] = 'Existing'
+	and [hidden_cou] = 0
+      </Filter>
+      <!-- the other Blue/Red line entry is for zoom levels 14+ -->
+      <MinScaleDenominator>50000</MinScaleDenominator>
+
       <!-- Blue -->
       <LineSymbolizer>
 	<CssParameter name="stroke">#0000ff</CssParameter>
@@ -81,11 +91,16 @@
 	<CssParameter name="stroke-dasharray">15,15</CssParameter>
       </LineSymbolizer>
     </Rule>
-    
-    <!-- MAX Blue/Green Line 
-    	present on the approach to Gateway TC from the east, easy to overlook. Issues 1 and 9 -->
+
+    <!-- MAX Blue/Red Line, couplets shown -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'BG'</Filter>
+      <Filter>
+	[type] = 'MAX' and [line] = 'BR' 
+	and [status] = 'Existing'
+      </Filter>
+      <!-- the other Blue/Red line entry is for zoom levels < 14 -->
+      <MaxScaleDenominator>50000</MaxScaleDenominator>
+
       <!-- Blue -->
       <LineSymbolizer>
 	<CssParameter name="stroke">#0000ff</CssParameter>
@@ -94,16 +109,20 @@
       </LineSymbolizer>
       <!-- Red -->
       <LineSymbolizer>
-	<CssParameter name="stroke">#00ff00</CssParameter>
+	<CssParameter name="stroke">#ff0000</CssParameter>
 	<CssParameter name="stroke-width">7</CssParameter>
 	<CssParameter name="stroke-linejoin">round</CssParameter>
 	<CssParameter name="stroke-dasharray">15,15</CssParameter>
       </LineSymbolizer>
     </Rule>
 
-    <!-- MAX Green/Yellow Line -->
+    <!-- MAX Green/Yellow Line, couplets hidden -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'GY'</Filter>
+      <Filter>[type] = 'MAX' and [line] = 'GY' and [status] = 'Existing' 	and [hidden_cou] = 0
+      </Filter>
+      <!-- the other Green/Yellow line entry is for zoom levels 14+ -->
+      <MinScaleDenominator>50000</MinScaleDenominator>
+
       <!-- Green -->
       <LineSymbolizer>
 	<CssParameter name="stroke">#00ff00</CssParameter>
@@ -119,9 +138,51 @@
       </LineSymbolizer>
     </Rule>
 
+    <!-- MAX Green/Yellow Line, couplets shown -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'GY' and [status] = 'Existing'
+      </Filter>
+      <!-- the other Green/Yellow line entry is for zoom levels < 14 -->
+      <MaxScaleDenominator>50000</MaxScaleDenominator>
+
+      <!-- Green -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#00ff00</CssParameter>
+	<CssParameter name="stroke-width">7</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+      <!-- Yellow -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#e5e200</CssParameter>
+	<CssParameter name="stroke-width">7</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">15,15</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+    
+    <!-- MAX Blue/Green Line 
+    	present on the approach to Gateway TC from the east, easy to overlook. Issues 1 and 9 -->
+    <Rule>
+      <Filter>[type] = 'MAX' and [line] = 'BG' and [status] = 'Existing'</Filter>
+      <!-- Blue -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#0000ff</CssParameter>
+	<CssParameter name="stroke-width">7</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+      </LineSymbolizer>
+      <!-- Red -->
+      <LineSymbolizer>
+	<CssParameter name="stroke">#00ff00</CssParameter>
+	<CssParameter name="stroke-width">7</CssParameter>
+	<CssParameter name="stroke-linejoin">round</CssParameter>
+	<CssParameter name="stroke-dasharray">15,15</CssParameter>
+      </LineSymbolizer>
+    </Rule>
+
+
     <!-- MAX Blue/Green/Red Line -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'BGR'</Filter>
+      <Filter>[type] = 'MAX' and [line] = 'BGR' and [status] = 'Existing'</Filter>
       <!-- Blue -->
       <LineSymbolizer>
 	<CssParameter name="stroke">#0000ff</CssParameter>
@@ -151,7 +212,7 @@
 
     <!-- MAX Blue/Green/Red/Yellow Line -->
     <Rule>
-      <Filter>[type] = 'MAX' and [line] = 'BGRY'</Filter>
+      <Filter>[type] = 'MAX' and [line] = 'BGRY' and [status] = 'Existing'</Filter>
       <!-- Blue -->
       <LineSymbolizer>
 	<CssParameter name="stroke">#0000ff</CssParameter>
