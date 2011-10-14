@@ -21,7 +21,7 @@ $(document).ready(function () {
 				    {maxZoom: 18, attribution: tileAttr});
 
     var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
-				       {maxZoom: 18});
+				       {maxZoom: 18, attribution: 'Data courtesy TriMet'});
     
 
     var lat = query.lat?Number(query.lat):45.5240;
