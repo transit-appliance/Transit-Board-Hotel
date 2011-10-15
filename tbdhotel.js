@@ -85,18 +85,40 @@ function tbdHotel() {
     var destIds = realTimeArrivals.optionsConfig.destinations[0].split(',');
     console.log('destinations: ' + destIds.join(' '));
 
-    // Use the Couch Multiple Document Interface to fetch all of the
-    // destinations in one fell swoop
-    $.ajax({
-	// include the documents, get them all
-	url: 'http://transitappliance.couchone.com/destinations/_all_docs?include_docs=true',
-	dataType: 'jsonp',
-	type: 'GET',
-	// filter to just the IDs we want
-	data: {keys: destIds},
-	success: function (data) {
-	    console.log('Successfully retrieved data');
-	}
+    // TODO:
+    // Once CouchDB supports CORS, we should use the Multiple Document Interface
+    // this is global on purpose
+    destinations = [];
+
+    // this will be passed to $.when so that we get a callback when all have 
+    // completed
+    var requests = [];
+
+    var destLen = destIds.length;
+    for (var i = 0; i < destLen; i++) {
+	requests.push($.ajax({
+	    url: 'http://transitappliance.couchone.com/destinations/' + 
+		destIds[i],
+	    dataType: 'jsonp',
+	    success: function (data) {
+		destinations.push(data);
+	    },
+	    error: function () { 
+		console.log('error retrieving destination ' + destIds[i]);
+	    }
+	}));
+    }
+
+    // .apply is barely documented, but I finally figured it out from
+    // comments on http://www.erichynds.com/jquery/using-deferreds-in-jquery/
+    // and http://jsfiddle.net/ehynds/MU3Rq/
+    $.when.apply(null, requests).done(function () {
+	console.log('retrieved all destinations successfully');
+	// do something cool
+	doDisplay();
+    }).fail(function () { 
+	// TODO: What to do in this case?
+	console.log('failed');
     });
 }
 
