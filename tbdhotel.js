@@ -241,8 +241,38 @@ function updateWeather () {
 	url: buildProxyURL(url),
 	dataType: 'xml',
 	success: function (data) {
-	    weather = data;
-	    console.log('retrieved NOAA data');
+	    // Parse the time layouts
+	    var layouts = {};
+	    $('time-layout').each(function (ind, layout) {
+		// iterate over the starts, find the adjacent ends,
+		// convert them to datetimes, and save
+		layout.find('start-valid-time').each(function (ind, start) {
+		    end = start.next();
+		    // parse out the dates
+		     var year = start.slice(0, 4);
+		    var mo = Number(start.slice(5,7)) - 1; // Jan is 0 in JS
+		    var day = start.slice(8, 10);
+		    var hour = start.slice(11, 13);
+		    var min = start.slice(14, 16);
+		    // Must be number or will be interpreted as tz
+		    var sec = Number(start.slice(17,18));
+		    var start_date = new tzDate(year, mo, day, hour, min, sec, 'America/Los_Angeles');
+
+		    end = start.next();
+		    // parse out the dates
+		     var year = end.slice(0, 4);
+		    var mo = Number(end.slice(5,7)) - 1; // Jan is 0 in JS
+		    var day = end.slice(8, 10);
+		    var hour = end.slice(11, 13);
+		    var min = end.slice(14, 16);
+		    // Must be number or will be interpreted as tz
+		    var sec = Number(end.slice(17,18));
+		    var end_date = new tzDate(year, mo, day, hour, min, sec, 'America/Los_Angeles');
+
+		    layouts[layout.find('layout-key').text()] = {start: start_date, end: end_date};
+		});
+	    });
 	}
     });
 }
+						    
