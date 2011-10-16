@@ -203,10 +203,15 @@ function showDestination(i) {
 	// this is a DOM element, not a jquery element
 	var photo = $(this);
 	setTimeout(function () {
-	    photo.slideUp();
+	    photo.slideUp(300);
 	}, i * imageTimeout);
 	i++;
     });
+
+    // Do things with the map
+    // this is the time the images are done hiding
+    var base = (i * imageTimeout) + 300;
+
     
     
 }
