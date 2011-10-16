@@ -121,6 +121,9 @@ function doDisplay() {
     // TODO: 10 mins correct amount of time?
     setInterval(updateTripPlans, 10*60*1000);
 
+    updateWeather();
+    // once/hr, the max request rate
+    setInterval(updateWeather, 60*60*1000);
 
     // set up the info bar
     var hu = $(window).height() / 100;
@@ -219,4 +222,27 @@ function showDestination(i) {
 // This updates the trip plans. It runs occasionally
 function updateTripPlans() {
     console.log('updating trip plans');
+}
+
+function updateWeather () {
+    // Quick Sinatra proxy on Heroku, I had issues with YQL
+    function buildProxyURL(url) {
+	return 'http://falling-dawn-9259.herokuapp.com/?url=' + encodeURIComponent(url)
+    }
+
+    var origin = realTimeArrivals.optionsConfig.origin[0].split(',');
+
+    url = 'http://graphical.weather.gov/xml/sample_products/browser_interface/ndfdXMLclient.php?whichClient=NDFDgen' +
+	'&lat=' + origin[0] +
+	'&lon=' + origin[1] +
+	'&product=time-series&begin=2004-01-01T00%3A00%3A00&end=2015-10-15T00%3A00%3A00&Unit=e&temp=temp&wx=wx&icons=icons&Submit=Submit';
+
+    $.ajax({
+	url: buildProxyURL(url),
+	dataType: 'xml',
+	success: function (data) {
+	    weather = data;
+	    console.log('retrieved NOAA data');
+	}
+    });
 }
