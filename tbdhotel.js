@@ -19,20 +19,6 @@ $(document).ready(function () {
 });
 
 function tbdHotel() {
-    // set the sizes
-    // one height unit = 1%
-    var hu = $(window).height() / 100;
-    
-    $('#head-box').height(15*hu);
-    $('#slideshow').height(56*hu);
-    $('#trip-box').height(23*hu);
-
-    // nested inside trip-box
-    $('#narrative').height(16*hu);
-    $('#trip-details').height(6*hu);
-
-    $('#bar').height(6*hu);
-
     // allow them to set either a CloudMade style or a custom tile server
     if (realTimeArrivals.optionsConfig.cloudmadeStyle != undefined) {
 	// config section
@@ -74,7 +60,7 @@ function tbdHotel() {
     
     // add this back
     //{zoomControl: false})
-    var map = new L.Map(
+    map = new L.Map(
 	'map')
 	.setView(new L.LatLng(45.5240, -122.6810), 14)
 	.addLayer(baseLayer)
@@ -122,3 +108,110 @@ function tbdHotel() {
     });
 }
 
+// This jump-starts the display
+function doDisplay() {
+    var originRaw = realTimeArrivals.optionsConfig.origin[0].split(',');
+    var origin = new L.LatLng(Number(originRaw[0]), Number(originRaw[1]));
+    
+    // pretty far in
+    map.setView(origin, 15);
+
+    // seed the data before we display it
+    updateTripPlans();
+    // TODO: 10 mins correct amount of time?
+    setInterval(updateTripPlans, 10*60*1000);
+
+
+    // set up the info bar
+    var hu = $(window).height() / 100;
+    $('#bar').height(6*hu);
+    $('#bar-location').text(realTimeArrivals.optionsConfig.originName[0]);
+
+    // main loop
+    showDestination(0);
+}
+
+function showDestination(i) {
+    var dest = destinations[i];
+
+    // TODO: check for reasonableness and skip if necessary
+
+    // set the sizes
+    // one height unit = 1%
+    var hu = $(window).height() / 100;
+
+    // set up non-slideshow components
+    // put text in spans so it will be resized
+    $('#main-text').html('<span>' + dest.properties.name + '</span>');
+    if (dest.properties.subtitle != null) {
+	$('#subhead').html('<span>'+dest.properties.subtitle+'</span>');
+	
+	// now, allocate screen real estate
+	var totalText = dest.properties.name.length + 
+	    dest.properties.subtitle.length;
+	// The weighting factors here were found by trial and (mostly) error
+	var percentName = 85 * dest.properties.name.length / totalText;
+	var percentSub = 70 - percentName;
+    }
+    // no subtitle
+    else {
+	var percentName = 100;
+	var percentSub = 0;
+    }
+
+    $('#main-text').css('width', percentName + '%');
+    $('#subtitle').css('width', percentSub + '%');
+
+    // get rid of the last destinations images
+    $('.photo').remove();
+
+    // add the slideshow images
+    // there is a maximum of 4 with the current data architecture. 
+    // 2 is reasonable
+    var html = '';
+    for (var i = 1; i <= 4; i++) {
+	// stored as image[1...4]_url, since it comes from a Shapefile
+	var imageUrl = dest.properties['image' + i + '_url'];
+	if (imageUrl != null)
+	    html += '<li class="photo">'+
+	    '<img src="' + imageUrl + '" height="' + hu*52 + '"/></li>\n';
+    }
+
+    $('#slideshow ul').prepend(html);
+
+    // have to do this before setting sizes. You'll never see it it's so fast
+    // fade in, 0.1s
+    $('#container').fadeIn(500);
+
+    $('#main-text').height(10*hu).textfill({maxFontPixels: 10*hu});
+    $('#subtitle').height(10*hu).textfill({maxFontPixels: 7*hu});
+    $('#head-box').height(10*hu);
+
+    $('#slideshow').height(54*hu);
+    $('#trip-box').height(23*hu);
+
+    // nested inside trip-box
+    $('#narrative').height(16*hu);
+    $('#trip-details').height(6*hu);
+
+    var imageTimeout = 
+	1000 * Number(realTimeArrivals.optionsConfig.imageTimeout || 3);
+
+    // set slideUps for each image in turn
+    var i = 1;
+    $('.photo').each(function () {
+	// this is a DOM element, not a jquery element
+	var photo = $(this);
+	setTimeout(function () {
+	    photo.slideUp();
+	}, i * imageTimeout);
+	i++;
+    });
+    
+    
+}
+
+// This updates the trip plans. It runs occasionally
+function updateTripPlans() {
+    console.log('updating trip plans');
+}
