@@ -133,6 +133,10 @@ function doDisplay() {
 	maxFontPixels: $('#bar').height()
     });
 
+    // update the clock every 15 seconds
+    updateClock();
+    setInterval(updateClock, 15*1000);
+
     // main loop
     showDestination(0);
 }
@@ -290,3 +294,21 @@ function updateWeather () {
     });
 }
 						    
+
+// update the clock, called every 15s
+function updateClock () {
+    var now = localTime();
+    // is monday 0 in some places?
+    var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var hour = now.getHours() % 12;
+    if (hour == 0) hour = 12;
+    if (now.getHours() >= 12) var ap = 'PM';
+    else                      var ap = 'AM';
+
+    var time = days[now.getDay()] + ' ' + hour + ':' + 
+	now.getMinutes() + ' ' + ap;
+
+    console.log(time);
+    $('#bar-datetime span').text(time);
+    $('#bar-datetime').textfill();
+}
