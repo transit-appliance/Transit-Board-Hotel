@@ -225,54 +225,49 @@ function updateTripPlans() {
 }
 
 function updateWeather () {
-    // Quick Sinatra proxy on Heroku, I had issues with YQL
-    function buildProxyURL(url) {
-	return 'http://falling-dawn-9259.herokuapp.com/?url=' + encodeURIComponent(url)
-    }
+    weather = {};
 
     var origin = realTimeArrivals.optionsConfig.origin[0].split(',');
 
-    url = 'http://graphical.weather.gov/xml/sample_products/browser_interface/ndfdXMLclient.php?whichClient=NDFDgen' +
-	'&lat=' + origin[0] +
-	'&lon=' + origin[1] +
-	'&product=time-series&begin=2004-01-01T00%3A00%3A00&end=2015-10-15T00%3A00%3A00&Unit=e&temp=temp&wx=wx&icons=icons&Submit=Submit';
+    url = '';
 
-    $.ajax({
-	url: buildProxyURL(url),
-	dataType: 'xml',
-	success: function (data) {
-	    // Parse the time layouts
-	    var layouts = {};
-	    $('time-layout').each(function (ind, layout) {
-		// iterate over the starts, find the adjacent ends,
-		// convert them to datetimes, and save
-		layout.find('start-valid-time').each(function (ind, start) {
-		    end = start.next();
-		    // parse out the dates
-		     var year = start.slice(0, 4);
-		    var mo = Number(start.slice(5,7)) - 1; // Jan is 0 in JS
-		    var day = start.slice(8, 10);
-		    var hour = start.slice(11, 13);
-		    var min = start.slice(14, 16);
-		    // Must be number or will be interpreted as tz
-		    var sec = Number(start.slice(17,18));
-		    var start_date = new tzDate(year, mo, day, hour, min, sec, 'America/Los_Angeles');
+    // First, get the WOEID, and save it
+    if (weather.woeid == undefined) {
+	// for now this only works in the US b/c it uses ZIP Codes
+	var woeid_xhr = $.ajax({
+	    // SELECT postal.content FROM geo.places WHERE text="45,-122" LIMIT 1
+	    url: 'http://query.yahooapis.com/v1/public/yql?q=SELECT%20postal.content%20FROM%20geo.places%20WHERE%20text%3D%22' +
+		encodeURIComponent(origin[0] + ',' + origin[1]) + 
+		'%22%20LIMIT%201&format=json',
+	    dataType: 'json',
+	    success: function (data) {
+		weather.woeid = data.query.results.place.postal;
+	    }
+	});
+    }
+    else 
+	var woeid_xhr = true;
 
-		    end = start.next();
-		    // parse out the dates
-		     var year = end.slice(0, 4);
-		    var mo = Number(end.slice(5,7)) - 1; // Jan is 0 in JS
-		    var day = end.slice(8, 10);
-		    var hour = end.slice(11, 13);
-		    var min = end.slice(14, 16);
-		    // Must be number or will be interpreted as tz
-		    var sec = Number(end.slice(17,18));
-		    var end_date = new tzDate(year, mo, day, hour, min, sec, 'America/Los_Angeles');
+    // Use $.when to wait for the request to complete; if no request was made
+    // just go ahead
 
-		    layouts[layout.find('layout-key').text()] = {start: start_date, end: end_date};
-		});
-	    });
-	}
+    $.when(woeid_xhr).done(function () {
+	// SELECT item.condition FROM weather.forecast WHERE location=
+	var url = 'http://query.yahooapis.com/v1/public/yql?q=SELECT%20item.condition%20from%20weather.forecast%20WHERE%20location%3D' +
+	    weather.woeid + '&format=json';
+
+	$.ajax({
+	    url: url,
+	    dataType: 'json',
+	    success: function (data) {
+		weather.condition = data.query.results.channel.item.condition;
+		var text = weather.condition.temp + '&deg;F/' +
+		    (Number(weather.condition.temp) - 32) * (5/9) +
+		    '&deg;C';
+		$('#bar-temp').text(text);
+	    }	
+	    // TODO: add fail handler here and above
+	});
     });
 }
 						    
