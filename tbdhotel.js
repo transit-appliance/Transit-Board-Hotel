@@ -122,13 +122,16 @@ function doDisplay() {
     setInterval(updateTripPlans, 10*60*1000);
 
     updateWeather();
-    // once/hr, the max request rate
-    setInterval(updateWeather, 60*60*1000);
+    // update the weather once every 20 minutes
+    setInterval(updateWeather, 20*60*1000);
 
     // set up the info bar
     var hu = $(window).height() / 100;
     $('#bar').height(6*hu);
-    $('#bar-location').text(realTimeArrivals.optionsConfig.originName[0]);
+    $('#bar-location span').text(realTimeArrivals.optionsConfig.originName[0]);
+    $('#bar-location').textfill({
+	maxFontPixels: $('#bar').height()
+    });
 
     // main loop
     showDestination(0);
@@ -261,10 +264,13 @@ function updateWeather () {
 	    dataType: 'json',
 	    success: function (data) {
 		weather.condition = data.query.results.channel.item.condition;
-		var text = weather.condition.temp + '&deg;F/' +
-		    (Number(weather.condition.temp) - 32) * (5/9) +
-		    '&deg;C';
-		$('#bar-temp').text(text);
+		var text = weather.condition.temp + '&deg; F/' +
+		    Math.round((Number(weather.condition.temp) - 32) * (5/9)) +
+		    '&deg; C';
+		$('#bar-temp span').html(text);
+		$('#bar-temp').textfill({
+		    maxFontPixels: $('#bar').height()
+		});
 	    }	
 	    // TODO: add fail handler here and above
 	});
