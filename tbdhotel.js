@@ -137,8 +137,8 @@ function doDisplay() {
     showDestination(0);
 }
 
-function showDestination(i) {
-    var dest = destinations[i];
+function showDestination(iteration) {
+    var dest = destinations[iteration];
 
     // TODO: check for reasonableness and skip if necessary
 
@@ -163,6 +163,8 @@ function showDestination(i) {
     else {
 	var percentName = 100;
 	var percentSub = 0;
+	// clear out any old subtitle
+	$('#subhead').text('');
     }
 
     $('#main-text').css('width', percentName + '%');
@@ -218,8 +220,19 @@ function showDestination(i) {
     // this is the time the images are done hiding
     var base = (i * imageTimeout) + 300;
 
-    
-    
+    // Show the next slide
+    setTimeout(function () {
+	$('#container').fadeOut(500);
+	
+	// wait 550 ms, then show the next slide
+	setTimeout(function () {
+	    iteration++;
+	    if (iteration < destinations.length) 
+		showDestination(iteration);
+	    else 
+		showDestination(0);
+	}, 550);
+    }, base + 10*1000);    
 }
 
 // This updates the trip plans. It runs occasionally
