@@ -339,13 +339,14 @@ function updateWeather () {
 		    '16': 'weather-icons/snow-100px.png', // snow
 		    '17': 'weather-icons/snow-100px.png', // hail
 		    '18': 'weather-icons/snow-100px.png', // sleet
-		    '19': 'weather-icons/-100px.png', // dust - ?
-		    '20': 'weather-icons/-100px.png', // foggy
-		    '21': 'weather-icons/-100px.png', // haze
-		    '22': 'weather-icons/-100px.png', // smoky
-		    '23': 'weather-icons/-100px.png', // blustery
-		    '24': 'weather-icons/-100px.png', // windy
-		    '25': 'weather-icons/-100px.png', // cold
+		    '19': 'weather-icons/overcast-100px.png', // dust - ?
+		    '20': 'weather-icons/overcast-100px.png', // foggy
+		    '21': 'weather-icons/overcast-100px.png', // haze
+		    '22': 'weather-icons/overcast-100px.png', // smoky
+		    // since on these we're not sure, choose the middle ground
+		    '23': 'weather-icons/few-clouds-100px.png', // blustery
+		    '24': 'weather-icons/few-clouds-100px.png', // windy
+		    '25': 'weather-icons/few-clouds-100px.png', // cold
 		    '26': 'weather-icons/overcast-100px.png', // cloudy
 		    '27': 'weather-icons/overcast-100px.png', // mostly cloudy (night)
 		    '28': 'weather-icons/overcast-100px.png', // mostly cloudy (day)
@@ -368,7 +369,7 @@ function updateWeather () {
 		    '45': 'weather-icons/storm-100px.png', // thundershowers
 		    '46': 'weather-icons/snow-100px.png', // snow showers
 		    '47': 'weather-icons/storm-100px.png', // isolated thundershowers
-		    '3200': 'weather-icons/-100px.png', // not available
+		    '3200': '', // not available
 		}
 		$('#bar-icon img').attr('src', icons[weather.condition.code]);
 
