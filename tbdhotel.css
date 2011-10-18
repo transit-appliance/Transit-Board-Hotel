@@ -38,6 +38,9 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;}
 
 .bar-icon { width: 5% }
 
+/* 93% so it isn't swallowed by the info bar */
+.attribution { width: 100%; height: 93%; display: none }
+
 #yweather-attribution { font-size: 8pt; color: #ffffff }
 
 .slideshow ul {

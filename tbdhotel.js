@@ -234,9 +234,28 @@ function showDestination(iteration) {
 	    if (iteration < destinations.length) 
 		showDestination(iteration);
 	    else 
-		showDestination(0);
+		showAttribution();
 	}, 550);
     }, base + 10*1000);    
+}
+
+function showAttribution () {
+    $('#attribution').fadeIn(500);
+    $('#attribution').textfill();
+
+    setTimeout(function () {
+	$('#attribution').fadeOut(500);
+    }, 2500); // show for two seconds, plus fade
+
+    setTimeout(function () {
+	showDestination(0);
+    }, 3050); // then show the first destination 50 ms after the fade finishes.
+}
+
+// Add an attribution string
+function addAttribution (attr) {
+    $('#attribution span').append(attr + '<br/>');
+    // Can't do textfill here b/c object is likely invisible
 }
 
 // This updates the trip plans. It runs occasionally
