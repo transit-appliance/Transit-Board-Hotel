@@ -66,8 +66,9 @@ function tbdHotel() {
     
     // add this back
     //{zoomControl: false})
-    map = new L.Map(
-	'map')
+    map = new L.Map('map', {
+	attributionControl: false // attr is handled separately.
+    })
 	.setView(new L.LatLng(45.5240, -122.6810), 14)
 	.addLayer(baseLayer)
 	.addLayer(transitLayer);
