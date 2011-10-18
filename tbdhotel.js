@@ -19,6 +19,11 @@ $(document).ready(function () {
 });
 
 function tbdHotel() {
+    // we get top billing
+    addAttribution('Transit Board&#153; Hotel, a ' +
+		   '<a href="http://portlandtransport.com">Portland Transport' +
+		   '</a> Production.');
+
     // allow them to set either a CloudMade style or a custom tile server
     if (realTimeArrivals.optionsConfig.cloudmadeStyle != undefined) {
 	// config section
@@ -42,21 +47,22 @@ function tbdHotel() {
 	// style #46244 is the one Matt built for this project
 	var tileUrl = 'http://{s}.tile.cloudmade.com/2d634343963a4426b126ab70b62bba2a/46244/256/{z}/{x}/{y}.png';
 	
-	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade.';
     }    
-	
-    var rights_string = '';
+
+    addAttribution(tileAttr);
+ 
     for (var agency in realTimeArrivals.stopsConfig) {
-        rights_string += realTimeArrivals.agencyCache.agencyData(agency).rights_notice+" ";
+        addAttribution(
+	    realTimeArrivals.agencyCache.agencyData(agency).rights_notice);
     }
 
-    tileAttr += rights_string;
-
     var baseLayer = new L.TileLayer(tileUrl, 
-				    {maxZoom: 18, attribution: tileAttr});
+				    {maxZoom: 18});
 
     var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
 				       {maxZoom: 18});
+    addAttribution('Rail line info courtesy TriMet.');
     
     // add this back
     //{zoomControl: false})
@@ -95,7 +101,7 @@ function tbdHotel() {
 	}));
     }
 
-    // .apply is barely documented, but I finally figured it out from
+    // figured it out from
     // comments on http://www.erichynds.com/jquery/using-deferreds-in-jquery/
     // and http://jsfiddle.net/ehynds/MU3Rq/
     $.when.apply(null, requests).done(function () {
@@ -121,6 +127,7 @@ function doDisplay() {
     // TODO: 10 mins correct amount of time?
     setInterval(updateTripPlans, 10*60*1000);
 
+    addAttribution('Weather courtesy Yahoo! Weather.');
     updateWeather();
     // update the weather once every 20 minutes
     setInterval(updateWeather, 20*60*1000);
@@ -245,11 +252,11 @@ function showAttribution () {
 
     setTimeout(function () {
 	$('#attribution').fadeOut(500);
-    }, 2500); // show for two seconds, plus fade
+    }, 4500); // show for four seconds, plus fade
 
     setTimeout(function () {
 	showDestination(0);
-    }, 3050); // then show the first destination 50 ms after the fade finishes.
+    }, 5050); // then show the first destination 50 ms after the fade finishes.
 }
 
 // Add an attribution string
