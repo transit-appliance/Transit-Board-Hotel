@@ -315,6 +315,67 @@ function updateWeather () {
 		$('#bar-temp').textfill({
 		    maxFontPixels: $('#bar').height()
 		});
+
+		// set the icons
+		// these are all the Yahoo! condition codes, from
+		// http://developer.yahoo.com/weather/
+		var icons = {
+		    '0': 'weather-icons/severe-alert-100px.png', // tornado
+		    '1': 'weather-icons/severe-alert-100px.png', // tropical storm
+		    '2': 'weather-icons/severe-alert-100px.png', // hurricane
+		    '3': 'weather-icons/severe-alert-100px.png', // severe thunderstorms
+		    '4': 'weather-icons/storm-100px.png', // thunderstorms
+		    '5': 'weather-icons/snow-100px.png', // mixed rain and snow
+		    '6': 'weather-icons/snow-100px.png', // mixed rain and sleet
+		    '7': 'weather-icons/snow-100px.png', // mixed snow and sleet
+		    '8': 'weather-icons/snow-100px.png', // freezing drizzle
+		    '9': 'weather-icons/showers-100px.png', // drizzle
+		    '10': 'weather-icons/showers-100px.png', // freezing rain
+		    '11': 'weather-icons/showers-100px.png', // showers
+		    '12': 'weather-icons/showers-100px.png', // showers
+		    '13': 'weather-icons/snow-100px.png', // snow flurries
+		    '14': 'weather-icons/snow-100px.png', // light snow showers
+		    '15': 'weather-icons/snow-100px.png', // blowing snow
+		    '16': 'weather-icons/snow-100px.png', // snow
+		    '17': 'weather-icons/snow-100px.png', // hail
+		    '18': 'weather-icons/snow-100px.png', // sleet
+		    '19': 'weather-icons/-100px.png', // dust - ?
+		    '20': 'weather-icons/-100px.png', // foggy
+		    '21': 'weather-icons/-100px.png', // haze
+		    '22': 'weather-icons/-100px.png', // smoky
+		    '23': 'weather-icons/-100px.png', // blustery
+		    '24': 'weather-icons/-100px.png', // windy
+		    '25': 'weather-icons/-100px.png', // cold
+		    '26': 'weather-icons/overcast-100px.png', // cloudy
+		    '27': 'weather-icons/overcast-100px.png', // mostly cloudy (night)
+		    '28': 'weather-icons/overcast-100px.png', // mostly cloudy (day)
+		    '29': 'weather-icons/few-clouds-night-100px.png', // partly cloudy (night)
+		    '30': 'weather-icons/few-clouds-100px.png', // partly cloudy (day)
+		    '31': 'weather-icons/clear-night-100px.png', // clear (night)
+		    '32': 'weather-icons/clear-100px.png', // sunny
+		    '33': 'weather-icons/clear-night-100px.png', // fair (night)
+		    '34': 'weather-icons/clear-100px.png', // fair (day)
+		    '35': 'weather-icons/showers-100px.png', // mixed rain and hail
+		    '36': 'weather-icons/clear-100px.png', // hot
+		    '37': 'weather-icons/storm-100px.png', // isolated thunderstorms
+		    '38': 'weather-icons/storm-100px.png', // scattered thunderstorms
+		    '39': 'weather-icons/storm-100px.png', // scattered thunderstorms
+		    '40': 'weather-icons/showers-scattered-100px.png', // scattered showers
+		    '41': 'weather-icons/snow-100px.png', // heavy snow
+		    '42': 'weather-icons/snow-100px.png', // scattered snow showers
+		    '43': 'weather-icons/snow-100px.png', // heavy snow
+		    '44': 'weather-icons/few-clouds-100px.png', // partly cloudy
+		    '45': 'weather-icons/storm-100px.png', // thundershowers
+		    '46': 'weather-icons/snow-100px.png', // snow showers
+		    '47': 'weather-icons/storm-100px.png', // isolated thundershowers
+		    '3200': 'weather-icons/-100px.png', // not available
+		}
+		$('#bar-icon img').attr('src', icons[weather.condition.code]);
+
+		// don't overzoom the image
+		if ($('#bar').height() < 100)
+		    $('#bar-icon img').attr('height', $('#bar').height - 10);
+
 	    }	
 	    // TODO: add fail handler here and above
 	});
