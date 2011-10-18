@@ -327,12 +327,16 @@ function updateClock () {
     // is monday 0 in some places?
     var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     var hour = now.getHours() % 12;
+    var mins = now.getMinutes();
+    
+    if (mins < 10) mins = '0' + mins;
+
     if (hour == 0) hour = 12;
     if (now.getHours() >= 12) var ap = 'PM';
     else                      var ap = 'AM';
 
     var time = days[now.getDay()] + ' ' + hour + ':' + 
-	now.getMinutes() + ' ' + ap;
+	mins + ' ' + ap;
 
     console.log(time);
     $('#bar-datetime span').text(time);
