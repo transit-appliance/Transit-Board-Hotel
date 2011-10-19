@@ -43,9 +43,7 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;}
 /* 93% so it isn't swallowed by the info bar */
 .attribution { width: 100%; height: 93%; display: none }
 
-.slideshow ul {
-    list-style: none
-}
+.slideshow ul { list-style: none;  padding-left: 0px; }
 
 /* the way the slideshow works is that each image slideUp so the next 
    one is visible */
