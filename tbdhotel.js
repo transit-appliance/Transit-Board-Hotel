@@ -23,55 +23,11 @@ function tbdHotel() {
     addAttribution('Transit Board&#153; Hotel, a ' +
 		   '<a href="http://portlandtransport.com">Portland Transport' +
 		   '</a> Production.');
-
-    // allow them to set either a CloudMade style or a custom tile server
-    if (realTimeArrivals.optionsConfig.cloudmadeStyle != undefined) {
-	// config section
-	// it'd be better if the key was left as is, so that we can track traffic
-	// style #46244 is the one Matt built for this project
-	var tileUrl = 'http://{s}.tile.cloudmade.com/2d634343963a4426b126ab70b62bba2a/'+
-	    realTimeArrivals.optionsConfig.cloudmadeStyle[0] +
-	    '/256/{z}/{x}/{y}.png';
-	
-	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
-    }
-    else if (realTimeArrivals.optionsConfig.tileUrl != undefined) {
-	var tileUrl = realTimeArrivals.optionsConfig.tileUrl[0]
-	if (realTimeArrivals.optionsConfig.tileAttr != undefined)
-	    var tileAttr = realTimeArrivals.optionsConfig.tileAttr[0]
-	else var tileAttr = '';
-    }
-    else {
-	// config section
-	// it'd be better if the key was left as is, so that we can track traffic
-	// style #46244 is the one Matt built for this project
-	var tileUrl = 'http://{s}.tile.cloudmade.com/2d634343963a4426b126ab70b62bba2a/46244/256/{z}/{x}/{y}.png';
-	
-	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade.';
-    }    
-
-    addAttribution(tileAttr);
  
     for (var agency in realTimeArrivals.stopsConfig) {
         addAttribution(
 	    realTimeArrivals.agencyCache.agencyData(agency).rights_notice);
     }
-
-    var baseLayer = new L.TileLayer(tileUrl, 
-				    {maxZoom: 18});
-
-    var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
-				       {maxZoom: 18});
-    addAttribution('Rail line info courtesy TriMet.');
-    
-    // add this back
-    //{zoomControl: false})
-    map = new L.Map('map', {
-	attributionControl: false // attr is handled separately.
-    })
-	.setView(new L.LatLng(45.5240, -122.6810), 14)
-	.addLayer(baseLayer)
-	.addLayer(transitLayer);
 
     // set up custom CSS
     if (realTimeArrivals.optionsConfig.stylesheet != undefined) {
@@ -127,9 +83,58 @@ function tbdHotel() {
 function doDisplay() {
     var originRaw = realTimeArrivals.optionsConfig.origin[0].split(',');
     var origin = new L.LatLng(Number(originRaw[0]), Number(originRaw[1]));
-    
-    // pretty far in
-    map.setView(origin, 15);
+
+    // Init the map
+    // allow them to set either a CloudMade style or a custom tile server
+    if (realTimeArrivals.optionsConfig.cloudmadeStyle != undefined) {
+	// config section
+	// it'd be better if the key was left as is, so that we can track traffic
+	// style #46244 is the one Matt built for this project
+	var tileUrl = 'http://{s}.tile.cloudmade.com/2d634343963a4426b126ab70b62bba2a/'+
+	    realTimeArrivals.optionsConfig.cloudmadeStyle[0] +
+	    '/256/{z}/{x}/{y}.png';
+	
+	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+    }
+    else if (realTimeArrivals.optionsConfig.tileUrl != undefined) {
+	var tileUrl = realTimeArrivals.optionsConfig.tileUrl[0]
+	if (realTimeArrivals.optionsConfig.tileAttr != undefined)
+	    var tileAttr = realTimeArrivals.optionsConfig.tileAttr[0]
+	else var tileAttr = '';
+    }
+    else {
+	// config section
+	// it'd be better if the key was left as is, so that we can track traffic
+	// style #46244 is the one Matt built for this project
+	var tileUrl = 'http://{s}.tile.cloudmade.com/2d634343963a4426b126ab70b62bba2a/46244/256/{z}/{x}/{y}.png';
+	
+	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade.';
+    }    
+
+    addAttribution(tileAttr);
+
+    var baseLayer = new L.TileLayer(tileUrl, 
+				    {maxZoom: 18});
+
+    var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
+				       {maxZoom: 18});
+    addAttribution('Rail line info courtesy TriMet.');
+
+    // make it block positioned but invisible
+    // Leaflet will not init right if we put it in an invisible element
+    $('#container').css('opacity', '0').css('display', 'block');
+    // add this back
+    //{zoomControl: false})
+    map = new L.Map('map', {
+	attributionControl: false // attr is handled separately.
+    })
+	.addLayer(baseLayer)
+	.addLayer(transitLayer)
+	.setView(origin, 15);
+
+    // make sure we make it visible again! else jQuery will fade it 0 in
+    // to 0
+    $('#container').css('display', 'none').css('opacity', '1');
 
     // seed the data before we display it
     updateTripPlans();
