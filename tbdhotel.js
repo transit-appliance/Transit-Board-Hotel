@@ -73,6 +73,14 @@ function tbdHotel() {
 	.addLayer(baseLayer)
 	.addLayer(transitLayer);
 
+    // set up custom CSS
+    if (realTimeArrivals.optionsConfig.stylesheet != undefined) {
+	for (var i = 0; i < realTimeArrivals.optionsConfig.stylesheet.length;
+	     i++)
+	    $('head').append('<link rel="stylesheet" type="text/html" href="'+
+			   realTimeArrivals.optionsConfig.stylesheet[i] +
+			   '" />');
+    }
 
     // parse out the destinations
     var destIds = realTimeArrivals.optionsConfig.destinations[0].split(',');
