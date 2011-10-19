@@ -140,6 +140,12 @@ function doDisplay() {
     $('#bar-location').textfill({
 	maxFontPixels: $('#bar').height()
     });
+    // don't overzoom the image
+    // we have to do this before inserting the image,
+    // or it will force the bar large, then size to the forced size
+    // just do it once, to prevent creep.
+    if ($('#bar').height() < 100)
+	$('#bar-icon img').attr('height', $('#bar').height() - 10);
 
     // update the clock every 15 seconds
     updateClock();
@@ -371,12 +377,12 @@ function updateWeather () {
 		    '47': 'weather-icons/storm-100px.png', // isolated thundershowers
 		    '3200': '', // not available
 		}
+
+		// The height is already set once, to prevent drift; if it
+		// was increased by 1px on each iteration, the info bar would
+		// eventually take over the screen.
+
 		$('#bar-icon img').attr('src', icons[weather.condition.code]);
-
-		// don't overzoom the image
-		if ($('#bar').height() < 100)
-		    $('#bar-icon img').attr('height', $('#bar').height - 10);
-
 	    }	
 	    // TODO: add fail handler here and above
 	});
@@ -403,5 +409,5 @@ function updateClock () {
 
     console.log(time);
     $('#bar-datetime span').text(time);
-    $('#bar-datetime').textfill();
+    $('#bar-datetime').textfill({maxFontPixels: $('#bar').height()});
 }
