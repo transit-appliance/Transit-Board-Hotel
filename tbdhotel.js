@@ -1,6 +1,6 @@
 var realTimeArrivals;
-if (console.log != undefined) var log = console.log;
-else var log = function (m) {};
+if (typeof console == 'undefined') console = {
+    log: function (msg) {}};
 
 $(document).ready(function () {
     trArr({
