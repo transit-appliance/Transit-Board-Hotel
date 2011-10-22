@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>Transit Board(tm) Hotel Mobile</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
+    <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
+    <script src="tbdhmobile.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div data-role="page" id="tripPage">
+      Trip details here.
+      <div data-role="footer" data-theme="d">
+	<a href="#tripPage" data-role="button">Trip</a>
+	<!-- no break -->
+	<a href="#mapPage" data-role="button">Map</a>
+      </div>
+    </div>
+
+    <div data-role="page" id="mapPage">
+      X<br/>
+      you are here
+    </div>
+  </body>
+</html>
