@@ -286,8 +286,107 @@ function addAttribution (attr) {
 }
 
 // This updates the trip plans. It runs occasionally
+// This one is set up exclusively for TriMet
 function updateTripPlans() {
     console.log('updating trip plans');
+
+    // keep a local copy
+    var localDests = destinations;
+
+    // format the time to TriMet's liking
+    // we have to put in a time or we get no results, as documented
+    var now = timeInZone('America/Los_Angeles');
+    var hour = now.getHours() % 12;
+    var mins = now.getMinutes();
+    
+    if (mins < 10) mins = '0' + mins;
+
+    if (hour == 0) hour = 12;
+    if (now.getHours() >= 12) var ap = 'pm';
+    else                      var ap = 'am';
+
+    var time = hour + ':' + mins + ' ' + ap;
+
+    // documented at http://developer.trimet.org/ws_docs/tripplanner_ws.shtml
+    var tripPlannerParams = {
+	fromPlace: realTimeArrivals.optionsConfig.originName[0],
+	// reverse the lat,lon to be lon,lat
+	fromCoord: realTimeArrivals.optionsConfig.origin[0].split(',')[1] 
+	    + ',' + realTimeArrivals.optionsConfig.origin[0].split(',')[0],
+	time: time,
+	min: 'X', // fewest transfers
+	appID: '828B87D6ABC0A9DF142696F76'
+    };
+    
+    // Two passes - one gets the trip plans, one gets walking directions
+    // when OTP API is implemented, we won't need this anymore
+    var requestsPass1 = [];
+    var destsLen = localDests.length;
+    for (var i = 0; i < destsLen; i++) {
+	// so that we have an unchanging value in the closure
+	var iter = i;
+
+	// destination specific
+	var localParams = {
+	    toPlace: localDests[iter].properties.name,
+	    // already in lon, lat
+	    toCoord: localDests[iter].geometry.coordinates.join(',')
+	};
+
+	$.extend(localParams, tripPlannerParams);
+
+	var url = 'http://developer.trimet.org/ws/V1/trips/tripplanner' + '?' +
+	    jQuery.param(localParams);
+
+	var rq = $.ajax({
+	    // Quick proxy Matt wrote and put on Heroku
+	    url: 'http://falling-dawn-9259.herokuapp.com/?url=' + 
+		encodeURIComponent(url),
+	    dataType: 'xml',
+	    timeout: 100000,
+	    success: function (data) {
+		data = $(data);
+		// parachute out
+		if (data.find('error').length != 0) {
+		    console.log('error on destination ' +
+				localDests[iter].properties.name + ': ' +
+				data.find('error').text());
+		}
+
+		var lowCost = 1000000000;
+		var bestItin = null;
+		// loop through the itineraries, find the lowest-cost one
+		data.find('itinerary').each(function(ind, itin) {
+		    itin = $(itin);
+		    // make sure it fits hard requirements (0 transfers,
+		    // allowed stop)
+		    // TODO: allowed stop
+		    if (itin.find('numberOfTransfers').text() != '0')
+			return;
+		    
+		    // TODO: weights?
+		    var cost = Number(itin.find('time-distance duration').first().text()) +
+			0.1 * Number(itin.find('fare regular').first().text());
+		    
+		    // save this one, for now
+		    if (cost < lowCost) bestItin = itin;
+		});
+		
+		if (bestItin != null) 
+		    console.log('best itinerary for dest ' + 
+				localDests[iter].properties.name + ' via ' +
+				bestItin.attr('viaRoute'));
+		    else console.log('no itinerary found for dest ' + 
+				     localDests[iter].properties.name);
+		
+	    },
+	    error: function (x, stat) {
+		console.log(stat);
+	    }
+	});
+	// add it to the list, so we can wait for it to finish
+	requestsPass1.push(rq);
+    }
 }
 
 function updateWeather () {
@@ -420,7 +519,6 @@ function updateClock () {
     var time = days[now.getDay()] + ' ' + hour + ':' + 
 	mins + ' ' + ap;
 
-    console.log(time);
     $('#bar-datetime span').text(time);
     $('#bar-datetime').textfill({maxFontPixels: $('#bar').height()});
 }
