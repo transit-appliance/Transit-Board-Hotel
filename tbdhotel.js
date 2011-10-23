@@ -318,19 +318,25 @@ function updateTripPlans() {
 	appID: '828B87D6ABC0A9DF142696F76'
     };
     
-    // Two passes - one gets the trip plans, one gets walking directions
+    // Two passes - one gets the trip plans, one gets geometry and
+    // walking directions
     // when OTP API is implemented, we won't need this anymore
-    var requestsPass1 = [];
-    var destsLen = localDests.length;
-    for (var i = 0; i < destsLen; i++) {
-	// so that we have an unchanging value in the closure
-	var iter = i;
+
+    // this keeps track of whic destinations have completed
+    var destStatus = [];
+
+    // we use $.each not for so that each iteration gets its own scope
+    // otherwise i changes when the loop goes to the next iteration.
+    $.each(localDests, function (ind, dest) {
+	// This is resolved when this update has completed
+	var deferred = jQuery.Deferred();
+	destStatus.push(deferred);
 
 	// destination specific
 	var localParams = {
-	    toPlace: localDests[iter].properties.name,
+	    toPlace: dest.properties.name,
 	    // already in lon, lat
-	    toCoord: localDests[iter].geometry.coordinates.join(',')
+	    toCoord: dest.geometry.coordinates.join(',')
 	};
 
 	$.extend(localParams, tripPlannerParams);
@@ -349,8 +355,9 @@ function updateTripPlans() {
 		// parachute out
 		if (data.find('error').length != 0) {
 		    console.log('error on destination ' +
-				localDests[iter].properties.name + ': ' +
+				dest.properties.name + ': ' +
 				data.find('error').text());
+		    return;
 		}
 
 		var lowCost = 1000000000;
@@ -372,21 +379,43 @@ function updateTripPlans() {
 		    if (cost < lowCost) bestItin = itin;
 		});
 		
-		if (bestItin != null) 
+		if (bestItin != null) {
 		    console.log('best itinerary for dest ' + 
-				localDests[iter].properties.name + ' via ' +
+				dest.properties.name + ' via ' +
 				bestItin.attr('viaRoute'));
-		    else console.log('no itinerary found for dest ' + 
-				     localDests[iter].properties.name);
+
+		    // the itinerary output
+		    var itinOut = {};
+		    // now, get walking directions and transit geometry
+		    // transit geometries
+		    deferred.resolve();
+
+		}
 		
+		// no best itinerary
+		else {
+		    console.log('no itinerary found for dest ' + 
+				dest.properties.name);
+		    localDests[ind].itinerary = null;
+
+		    // resolve this request
+		    deferred.resolve();
+		}
 	    },
 	    error: function (x, stat) {
-		console.log(stat);
+		console.log('error loading trip plan for dest ' +
+			    dest.properties.name + ': ' + stat);
 	    }
-	});
-	// add it to the list, so we can wait for it to finish
-	requestsPass1.push(rq);
-    }
+	}); // initial ajax to TriMet WS
+    }); // each
+    
+    // wait for them all to complete
+    $.when.apply(null, destStatus).then(function () {
+	console.log('all destinations retrieved');
+	destinations = localDests;
+    }).fail(function () {
+	console.log('trip plans did not resolve')
+    });
 }
 
 function updateWeather () {
