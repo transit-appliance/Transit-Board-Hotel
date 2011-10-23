@@ -1,0 +1,15 @@
+$(document).ready(function () {
+    var map = null;
+
+    $('#mapLink').click(function (e) {
+	if (map == null) {
+	    var tileUrl = 'http://{s}.tile.cloudmade.com/2d634343963a4426b126ab70b62bba2a/46244/256/{z}/{x}/{y}.png';
+	    var tileAttr = 'Basemap data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+
+    var baseLayer = new L.TileLayer(tileUrl, 
+				    {maxZoom: 18, attribution: tileAttr});
+
+	    map = new L.Map('map')
+		.addLayer(baseLayer)
+		.setView(new L.LatLng(45.524, -122.681), 14);
+	    
