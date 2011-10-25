@@ -287,6 +287,43 @@ function addAttribution (attr) {
 
 // This updates the trip plans. It runs occasionally
 // This one is set up exclusively for TriMet
+
+// it should add a .itinerary attribute to each destination, or make it
+// null if there is no trip
+
+/* here is the format of .itinerary
+
+fromPlace (name)
+fromCoord
+toPlace
+toCoord
+fare
+time
+start
+end
+legs [ ]
+
+LEGS:
+type == 'walk':
+startCoord
+startPlace
+endCoord
+endPlace
+geometry (an array of L.LatLngs)
+time (in ms)
+distance (in meters)
+
+type == 'transit':
+Everything for walk, also:
+route
+startId (the stop ID of the start, in the format TriMet:8989
+endId
+
+startPlace/endPlace should be the stop or station name.
+
+*/
+
+
 function updateTripPlans() {
     console.log('updating trip plans');
 
@@ -383,11 +420,60 @@ function updateTripPlans() {
 		    console.log('best itinerary for dest ' + 
 				dest.properties.name + ' via ' +
 				bestItin.attr('viaRoute'));
-
+		    
 		    // the itinerary output
-		    var itinOut = {};
+		    localDests[ind].itinerary = {};
 		    // now, get walking directions and transit geometry
 		    // transit geometries
+		    var url = 'http://developer.trimet.org' +
+			// we can assume there is only one, 
+			// since we only
+			// consider 0-transfer trips
+			bestItin.find('lineURL url')
+			.first()
+			.text()
+		    // get rid of /transweb
+			.slice(9)
+		    // not sure why these are in the XML
+		    // and encodeURI seems to only handle the spaces
+			.replace(/ /g, '%20')
+			.replace(/,/g, '%2C')
+			.replace(/:/g, '%3A');
+
+		    var geomRq = $.ajax({
+			url: 'http://falling-dawn-9259.herokuapp.com/?url=' +
+			    encodeURIComponent(url),
+			dataType: 'json',
+			success: function (data) {
+			    var the_geom = [];
+
+			    // State Plane Oregon North
+			    var source = new Proj4js.Proj('EPSG:2269');
+			    // WGS84, will be converted to 3857/900913
+			    // internally
+			    var dest = new Proj4js.Proj('EPSG:4326');
+
+			    $.each(
+				data.results[0].points, 
+				function (ptind, pt) {
+				    // pt has x, y
+				    var point = new Proj4js.Point(pt); 
+				    // acts in place
+				    Proj4js.transform(source, dest, point);
+				    the_geom.push(new L.LatLng(point.x, point.y));
+				});
+
+			    localDests[ind].itinerary.geometry = the_geom;
+			},
+			error: function (stat) {
+			    console.log('error on destination transit geom-' + 
+					dest.properties.name + ': ' + stat);
+			}
+		    });
+		    
+			
+	    	    // when they're done, resolve even if they failed (?)
+		    $.when(geomRq)
 		    deferred.resolve();
 
 		}
