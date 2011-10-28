@@ -33,7 +33,6 @@ org.transitappliance.transitboardhotel = function (realTimeArrivals) {
 
     // TODO:
     // Once CouchDB supports CORS, we should use the Multiple Document Interface
-    // this is global on purpose
     this.destinations = [];
 
     // this will be passed to $.when so that we get a callback when all have 
@@ -287,7 +286,7 @@ org.transitappliance.transitboardhotel.prototype.addAttribution = function (attr
 /* here is the format of .itinerary
 
 fromPlace (name)
-fromCoord
+fromCoord (x,y)
 toPlace
 toCoord
 fare
@@ -298,12 +297,12 @@ legs [ ]
 
 LEGS:
 type == 'walk':
-startCoord
-startPlace
-endCoord
-endPlace
+fromCoord
+fromPlace
+toCoord
+toPlace
 geometry (an array of L.LatLngs)
-time (in ms)
+time (in mins)
 distance (in meters)
 
 type == 'transit':
@@ -311,6 +310,7 @@ Everything for walk, also:
 route
 startId (the stop ID of the start, in the format TriMet:8989
 endId
+stops (the number of stops)
 
 startPlace/endPlace should be the stop or station name.
 
@@ -322,6 +322,63 @@ org.transitappliance.transitboardhotel.prototype.updateTripPlans = function () {
 
     // keep a local copy
     var localDests = this.destinations;
+
+    // make a list to pass to jQuery.when
+    var rqs = [];
+
+    $.each(localDests, function (ind, dest) {
+	// have to use 2 deferreds, one in the getTripPlan... fcn,
+	// b/c otherwise the callback on the $.when could be called
+	// before the last itinerary had been saved. There is no guarantee
+	// what order callbacks will be executed in, I don't believe
+	var df = $.Deferred();
+
+	// returns a deferred, callback will save itinerary
+	var rq = instance.getTripPlanForDest(dest).then(function (itin) {
+	    localDests[ind].itinerary = itin;
+	    df.resolve();
+	});
+	rqs.push(df);
+    });
+
+    // when all the requests return, copy localDests to destinations
+    $.when.apply(null, rqs).done(function () {
+	console.log('finished retrieving destinations');
+	instance.destinations = localDests;
+    });
+}
+
+/**
+ * This function handles getting trip plans for a destination
+ * @param {object} dest The destination to fetch data for.
+ * @returns {jQuery.Deferred} deferred Callbacks attached to this will get the itinerary (described above) upon success.
+*/
+org.transitappliance.transitboardhotel.prototype.getTripPlanForDest = function (dest) {
+    // this consists of two steps: getting the trip plan, and then getting
+    // all the geometries (walk and transit). When OTP API is implemented,
+    // one API call will suffice
+    var instance = this;
+    var df = $.Deferred();
+
+    this.getTripPlanOnly(dest).then(function (itin) {
+	instance.fillOutGeometries(itin).then(function (itin) {
+	    df.resolve(itin);
+	});
+    });					  
+
+    return df;
+}
+
+/**
+ * Talk to the TriMet TP WS.
+ * @param {object} dest the destination
+ * @returns {jQuery.Deferred} df Callbacks attached will receive the itinerary,
+ * less the geometries.
+*/
+org.transitappliance.transitboardhotel.prototype.getTripPlanOnly = function (dest) {
+    var instance = this;
+
+    var deferred = $.Deferred();
 
     // format the time to TriMet's liking
     // we have to put in a time or we get no results, as documented
@@ -346,165 +403,131 @@ org.transitappliance.transitboardhotel.prototype.updateTripPlans = function () {
 	    this.realTimeArrivals.optionsConfig.origin[0].split(',')[0],
 	time: time,
 	min: 'X', // fewest transfers
-	appID: '828B87D6ABC0A9DF142696F76'
+	appID: '828B87D6ABC0A9DF142696F76',
+	toPlace: dest.properties.name,
+	// already in lon, lat
+	toCoord: dest.geometry.coordinates.join(',')
     };
-    
-    // Two passes - one gets the trip plans, one gets geometry and
-    // walking directions
-    // when OTP API is implemented, we won't need this anymore
 
-    // this keeps track of whic destinations have completed
-    var destStatus = [];
+    // can't use data arg to ajax b/c we're going to a proxy
+    var url = 'http://developer.trimet.org/ws/V1/trips/tripplanner' + '?' +
+	jQuery.param(tripPlannerParams);
 
-    // we use $.each not for so that each iteration gets its own scope
-    // otherwise i changes when the loop goes to the next iteration.
-    $.each(localDests, function (ind, dest) {
-	// This is resolved when this update has completed
-	var deferred = jQuery.Deferred();
-	destStatus.push(deferred);
-
-	// destination specific
-	var localParams = {
-	    toPlace: dest.properties.name,
-	    // already in lon, lat
-	    toCoord: dest.geometry.coordinates.join(',')
-	};
-
-	$.extend(localParams, tripPlannerParams);
-
-	var url = 'http://developer.trimet.org/ws/V1/trips/tripplanner' + '?' +
-	    jQuery.param(localParams);
-
-	var rq = $.ajax({
-	    // Quick proxy Matt wrote and put on Heroku
-	    url: 'http://falling-dawn-9259.herokuapp.com/?url=' + 
-		encodeURIComponent(url),
-	    dataType: 'xml',
-	    timeout: 100000,
-	    success: function (data) {
-		data = $(data);
-		// parachute out
-		if (data.find('error').length != 0) {
-		    console.log('error on destination ' +
-				dest.properties.name + ': ' +
-				data.find('error').text());
-		    return;
-		}
-
-		var lowCost = 1000000000;
-		var bestItin = null;
-		// loop through the itineraries, find the lowest-cost one
-		data.find('itinerary').each(function(ind, itin) {
-		    itin = $(itin);
-		    // make sure it fits hard requirements (0 transfers,
-		    // allowed stop)
-		    // TODO: allowed stop
-		    if (itin.find('numberOfTransfers').text() != '0')
-			return;
-		    
-		    // TODO: weights?
-		    var cost = Number(itin.find('time-distance duration').first().text()) +
-			0.1 * Number(itin.find('fare regular').first().text());
-		    
-		    // save this one, for now
-		    if (cost < lowCost) bestItin = itin;
-		});
-		
-		if (bestItin != null) {
-		    console.log('best itinerary for dest ' + 
-				dest.properties.name + ' via ' +
-				bestItin.attr('viaRoute'));
-
-		    // set up the itinerary
-		    var itinOut = {};
-		    itinOut.legs = [];
-		    itinOut.legs.push(
-			{type: 'walk'}
-		    );
-		    
-		    // the itinerary output
-		    localDests[ind].itinerary = {};
-		    // now, get walking directions and transit geometry
-		    // transit geometries
-		    var url = 'http://developer.trimet.org' +
-			// we can assume there is only one, 
-			// since we only
-			// consider 0-transfer trips
-			bestItin.find('lineURL url')
-			.first()
-			.text()
-		    // get rid of /transweb
-			.slice(9)
-		    // not sure why these are in the XML
-		    // and encodeURI seems to only handle the spaces
-			.replace(/ /g, '%20')
-			.replace(/,/g, '%2C')
-			.replace(/:/g, '%3A');
-
-		    var geomRq = $.ajax({
-			url: 'http://localhost:9292/?url=' +
-			    encodeURIComponent(url),
-			dataType: 'json',
-			success: function (data) {
-			    var the_geom = [];
-
-			    // State Plane Oregon North, NAD83(HARN)
-			    // figured out from
-			    // http://projects.opengeo.org/trimet/browser/resource/trunk/maps/js/tm-all-min.js?rev=69, line 3496
-			    var source = new Proj4js.Proj('EPSG:2913');
-			    // WGS84, will be converted to 3857/900913
-			    // internally
-			    var dest = new Proj4js.Proj('EPSG:4326');
-
-			    $.each(
-				data.results[0].points, 
-				function (ptind, pt) {
-				    // pt has x, y
-				    var point = new Proj4js.Point(pt.x, pt.y); 
-				    // acts in place
-				    Proj4js.transform(source, dest, point);
-				    the_geom.push(new L.LatLng(point.x, point.y));
-				});
-
-			    localDests[ind].itinerary.geometry = the_geom;
-			},
-			error: function (stat) {
-			    console.log('error on destination transit geom-' + 
-					dest.properties.name + ': ' + stat);
-			}
-		    });
-		    
-			
-	    	    // when they're done, resolve even if they failed (?)
-		    $.when(geomRq)
-		    deferred.resolve();
-
-		}
-		
-		// no best itinerary
-		else {
-		    console.log('no itinerary found for dest ' + 
-				dest.properties.name);
-		    localDests[ind].itinerary = null;
-
-		    // resolve this request
-		    deferred.resolve();
-		}
-	    },
-	    error: function (x, stat) {
-		console.log('error loading trip plan for dest ' +
-			    dest.properties.name + ': ' + stat);
+    var rq = $.ajax({
+	// Quick proxy Matt wrote and put on Heroku
+	url: 'http://falling-dawn-9259.herokuapp.com/?url=' + 
+	    encodeURIComponent(url),
+	dataType: 'xml',
+	timeout: 100000,
+	success: function (data) {
+	    data = $(data);
+	    // parachute out
+	    if (data.find('error').length != 0) {
+		console.log('error on destination ' +
+			    dest.properties.name + ': ' +
+			    data.find('error').text());
+		return;
 	    }
-	}); // initial ajax to TriMet WS
-    }); // each
-    
-    // wait for them all to complete
-    $.when.apply(null, destStatus).then(function () {
-	console.log('all destinations retrieved');
-	destinations = localDests;
-    }).fail(function () {
-	console.log('trip plans did not resolve')
-    });
+
+	    var lowCost = 1000000000;
+	    var bestItin = null;
+	    // loop through the itineraries, find the lowest-cost one
+	    data.find('itinerary').each(function(ind, itin) {
+		itin = $(itin);
+		// make sure it fits hard requirements (0 transfers,
+		// allowed stop)
+		// TODO: allowed stop
+		if (itin.find('numberOfTransfers').text() != '0')
+		    return;
+		
+		// TODO: weights?
+		var cost = Number(itin.find('time-distance duration').first().text()) +
+		    0.1 * Number(itin.find('fare regular').first().text());
+		
+		// save this one, for now
+		if (cost < lowCost) bestItin = itin;
+	    });
+	    
+	    if (bestItin != null) {
+		console.log('best itinerary for dest ' + 
+			    dest.properties.name + ' via ' +
+				bestItin.attr('viaRoute'));
+		
+		// set up the itinerary, normalize format
+		var itinOut = {};
+		itinOut.fromPlace = data.find('param[name="fromPlace"]').text();
+		itinOut.fromCoord = data.find('param[name="fromCoord"]').text();
+		itinOut.toPlace = data.find('param[name="toPlace"]').text();
+		itinOut.toCoord = data.find('param[name="toCoord"]').text();
+
+		// This is the transit leg
+		// for now, safe to assume only one
+		var transitLeg = {type: 'transit'};
+		var legXml = bestItin.find('leg').first();
+		transitLeg.fromPlace = legXml.find('from description').text();
+		transitLeg.fromCoord = legXml.find('from pos lon').text() + 
+		    ',' + legXml.find('from pos lat').text();
+		transitLeg.toPlace = legXml.find('to description').text();
+		transitLeg.toCoord = legXml.find('to pos lon').text() + 
+		    ',' + legXml.find('to pos lat').text();
+		transitLeg.time = Number(
+		    legXml.find('time-distance duration').text());
+
+		// stub out geometry in case it doesn't update
+		var from = transitLeg.fromCoord.split(',');
+		var to = transitLeg.toCoord.split(',');
+		transitLeg.geometry = [new L.LatLng(from[1], from[0]),
+				       new L.LatLng(to[1], to[0])];
+		
+		var initWalk = {type: 'walk'}
+		initWalk.fromCoord = itinOut.fromCoord;
+		initWalk.fromPlace = itinOut.fromPlace;
+		initWalk.toCoord   = transitLeg.fromCoord;
+		initWalk.toPlace   = transitLeg.fromPlace;
+		var from = initWalk.fromCoord.split(',');
+		var to = initWalk.toCoord.split(',');
+		initWalk.geometry = [new L.LatLng(from[1], from[0]),
+				       new L.LatLng(to[1], to[0])];
+
+		var finalWalk = {type: 'walk'}
+		finalWalk.toCoord   = itinOut.toCoord;
+		finalWalk.toPlace   = itinOut.toPlace;
+		finalWalk.fromCoord = transitLeg.toCoord;
+		finalWalk.fromPlace = transitLeg.toPlace;
+		var from = finalWalk.fromCoord.split(',');
+		var to = finalWalk.toCoord.split(',');
+		finalWalk.geometry = [new L.LatLng(from[1], from[0]),
+				       new L.LatLng(to[1], to[0])];
+		
+		itinOut.legs = [initWalk, transitLeg, finalWalk];
+	    }
+	    else {
+		itinOut = null;
+		console.log('no route to dest ' + dest.properties.name);
+	    }
+
+	    deferred.resolve(itinOut);
+		
+	},
+	error: function (x, stat) {
+	    console.log('error loading trip plan for dest ' +
+			dest.properties.name + ': ' + stat);
+	}
+    });		    
+    return deferred;
+}
+
+/**
+ * Fill out the transit and walk geometries
+ * stubbed for now
+ * @param {object} itin The itinerary to complete
+ * @returns {jQuery.Deferred} deferred Callbacks will be called with the
+ * completed itinerary.
+*/
+org.transitappliance.transitboardhotel.prototype.fillOutGeometries = function (itin) {
+    var df = new $.Deferred();
+    df.resolve(itin);
+    return df;
 }
 
 org.transitappliance.transitboardhotel.prototype.updateWeather = function () {
@@ -645,7 +668,8 @@ org.transitappliance.transitboardhotel.prototype.updateClock = function () {
 }
 
 $(document).ready(function () {
-    var tbdh;
+    // let it be global during dev, so it's easier to debug
+    //var tbdh;
 
     trArr({
 	configString: window.location.search,
