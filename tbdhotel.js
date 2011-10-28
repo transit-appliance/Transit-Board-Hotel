@@ -1,6 +1,5 @@
 if (typeof org == 'undefined') org = {};
 if (org.transitappliance == undefined) org.transitappliance = {};
-org.transitappliance = {};
 
 if (typeof console == 'undefined') console = {
     log: function (msg) {}};
