@@ -1,10 +1,10 @@
-if (typeof org == 'undefined') org = {};
-if (org.transitappliance == undefined) org.transitappliance = {};
+if (typeof com == 'undefined') com = {};
+if (com.transitboard == undefined) com.transitboard = {};
 
 if (typeof console == 'undefined') console = {
     log: function (msg) {}};
 
-org.transitappliance.transitboardhotel = function (realTimeArrivals) {
+com.transitboard.hotel = function (realTimeArrivals) {
     var instance = this;
     this.realTimeArrivals = realTimeArrivals;
 
@@ -68,7 +68,7 @@ org.transitappliance.transitboardhotel = function (realTimeArrivals) {
 }
 
 // This jump-starts the display
-org.transitappliance.transitboardhotel.prototype.doDisplay = function () {
+com.transitboard.hotel.prototype.doDisplay = function () {
     var instance = this;
 
     var originRaw = this.realTimeArrivals.optionsConfig.origin[0].split(',');
@@ -164,7 +164,7 @@ org.transitappliance.transitboardhotel.prototype.doDisplay = function () {
     });
 }
 
-org.transitappliance.transitboardhotel.prototype.showDestination = function (iteration) {
+com.transitboard.hotel.prototype.showDestination = function (iteration) {
     var instance = this;
     var dest = this.destinations[iteration];
     
@@ -279,7 +279,7 @@ org.transitappliance.transitboardhotel.prototype.showDestination = function (ite
     }, base + 10*1000);    
 }
 
-org.transitappliance.transitboardhotel.prototype.showAttribution = function () {
+com.transitboard.hotel.prototype.showAttribution = function () {
     var instance = this;
     $('#attribution').fadeIn(500);
     $('#attribution').textfill();
@@ -294,7 +294,7 @@ org.transitappliance.transitboardhotel.prototype.showAttribution = function () {
 }
 
 // Add an attribution string
-org.transitappliance.transitboardhotel.prototype.addAttribution = function (attr) {
+com.transitboard.hotel.prototype.addAttribution = function (attr) {
     $('#attribution span').append(attr + '<br/>');
     // Can't do textfill here b/c object is likely invisible
 }
@@ -338,7 +338,7 @@ startPlace/endPlace should be the stop or station name.
 
 */
 
-org.transitappliance.transitboardhotel.prototype.updateTripPlans = function () {
+com.transitboard.hotel.prototype.updateTripPlans = function () {
     var instance = this;
     console.log('updating trip plans');
 
@@ -381,7 +381,7 @@ org.transitappliance.transitboardhotel.prototype.updateTripPlans = function () {
  * @param {object} dest The destination to fetch data for.
  * @returns {jQuery.Deferred} deferred Callbacks attached to this will get the itinerary (described above) upon success.
 */
-org.transitappliance.transitboardhotel.prototype.getTripPlanForDest = function (dest) {
+com.transitboard.hotel.prototype.getTripPlanForDest = function (dest) {
     // this consists of two steps: getting the trip plan, and then getting
     // all the geometries (walk and transit). When OTP API is implemented,
     // one API call will suffice
@@ -403,7 +403,7 @@ org.transitappliance.transitboardhotel.prototype.getTripPlanForDest = function (
  * @returns {jQuery.Deferred} df Callbacks attached will receive the itinerary,
  * less the geometries.
 */
-org.transitappliance.transitboardhotel.prototype.getTripPlanOnly = function (dest) {
+com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
     var instance = this;
 
     var deferred = $.Deferred();
@@ -567,13 +567,13 @@ org.transitappliance.transitboardhotel.prototype.getTripPlanOnly = function (des
  * @returns {jQuery.Deferred} deferred Callbacks will be called with the
  * completed itinerary.
 */
-org.transitappliance.transitboardhotel.prototype.fillOutGeometries = function (itin) {
+com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
     var df = new $.Deferred();
     df.resolve(itin);
     return df;
 }
 
-org.transitappliance.transitboardhotel.prototype.updateWeather = function () {
+com.transitboard.hotel.prototype.updateWeather = function () {
     var instance = this;
     this.weather = {};
 
@@ -690,7 +690,7 @@ org.transitappliance.transitboardhotel.prototype.updateWeather = function () {
 						    
 
 // update the clock, called every 15s
-org.transitappliance.transitboardhotel.prototype.updateClock = function () {
+com.transitboard.hotel.prototype.updateClock = function () {
     var now = localTime();
     // is monday 0 in some places?
     var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -723,7 +723,7 @@ $(document).ready(function () {
 	    tbdh.realTimeArrivals = data;
 	},
 	initializeCallback: function (data) {
-	    tbdh = new org.transitappliance.transitboardhotel(data);
+	    tbdh = new com.transitboard.hotel(data);
 	}
     });
 });
