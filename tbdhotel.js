@@ -101,7 +101,7 @@ org.transitappliance.transitboardhotel.prototype.doDisplay = function () {
 	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade.';
     }    
 
-   this. addAttribution(tileAttr);
+   this.addAttribution(tileAttr);
 
     var baseLayer = new L.TileLayer(tileUrl, 
 				    {maxZoom: 18});
@@ -179,7 +179,7 @@ org.transitappliance.transitboardhotel.prototype.showDestination = function (ite
 	    dest.properties.subtitle.length;
 	// The weighting factors here were found by trial and (mostly) error
 	var percentName = 85 * dest.properties.name.length / totalText;
-	var percentSub = 70 - percentName;
+	var percentSub = 90 - percentName;
     }
     // no subtitle
     else {
@@ -190,7 +190,7 @@ org.transitappliance.transitboardhotel.prototype.showDestination = function (ite
     }
 
     $('#main-text').css('width', percentName + '%');
-    $('#subtitle').css('width', percentSub + '%');
+    $('#subhead').css('width', percentSub + '%');
 
     // get rid of the last destinations images
     $('.photo').remove();
@@ -214,7 +214,7 @@ org.transitappliance.transitboardhotel.prototype.showDestination = function (ite
     $('#container').fadeIn(500);
 
     $('#main-text').height(10*hu).textfill({maxFontPixels: 10*hu});
-    $('#subtitle').height(10*hu).textfill({maxFontPixels: 7*hu});
+    $('#subhead').height(10*hu).textfill({maxFontPixels: 7*hu});
     $('#head-box').height(10*hu);
 
     $('#slideshow').height(54*hu);
