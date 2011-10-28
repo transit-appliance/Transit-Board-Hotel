@@ -1,51 +1,41 @@
-var realTimeArrivals;
+if (typeof org == 'undefined') org = {};
+if (org.transitappliance == undefined) org.transitappliance = {};
+org.transitappliance = {};
+
 if (typeof console == 'undefined') console = {
     log: function (msg) {}};
 
-$(document).ready(function () {
-    trArr({
-	configString: window.location.search,
-	displayInterval: 30*1000,
-	displayCallback: function (data) {
-	    // save the real-time arrivals; they will be ref'd later on
-	    // I don't think there's any chance of this being referred to as
-	    realTimeArrivals = data;
-	},
-	initializeCallback: function (data) {
-	    realTimeArrivals = data;
-	    setTimeout(tbdHotel, 10);
-	}
-    });
-});
+org.transitappliance.transitboardhotel = function (realTimeArrivals) {
+    var instance = this;
+    this.realTimeArrivals = realTimeArrivals;
 
-function tbdHotel() {
     // we get top billing
-    addAttribution('Transit Board&#153; Hotel, a ' +
+    this.addAttribution('Transit Board&#153; Hotel, a ' +
 		   '<a href="http://portlandtransport.com">Portland Transport' +
 		   '</a> Production.');
  
     for (var agency in realTimeArrivals.stopsConfig) {
-        addAttribution(
-	    realTimeArrivals.agencyCache.agencyData(agency).rights_notice);
+        this.addAttribution(
+	    this.realTimeArrivals.agencyCache.agencyData(agency).rights_notice);
     }
 
     // set up custom CSS
-    if (realTimeArrivals.optionsConfig.stylesheet != undefined) {
-	for (var i = 0; i < realTimeArrivals.optionsConfig.stylesheet.length;
+    if (this.realTimeArrivals.optionsConfig.stylesheet != undefined) {
+	for (var i = 0; i < this.realTimeArrivals.optionsConfig.stylesheet.length;
 	     i++)
 	    $('head').append('<link rel="stylesheet" type="text/html" href="'+
-			   realTimeArrivals.optionsConfig.stylesheet[i] +
+			   this.realTimeArrivals.optionsConfig.stylesheet[i] +
 			   '" />');
     }
 
     // parse out the destinations
-    var destIds = realTimeArrivals.optionsConfig.destinations[0].split(',');
+    var destIds = this.realTimeArrivals.optionsConfig.destinations[0].split(',');
     console.log('destinations: ' + destIds.join(' '));
 
     // TODO:
     // Once CouchDB supports CORS, we should use the Multiple Document Interface
     // this is global on purpose
-    destinations = [];
+    this.destinations = [];
 
     // this will be passed to $.when so that we get a callback when all have 
     // completed
@@ -58,7 +48,7 @@ function tbdHotel() {
 		destIds[i],
 	    dataType: 'jsonp',
 	    success: function (data) {
-		destinations.push(data);
+		instance.destinations.push(data);
 	    },
 	    error: function () { 
 		console.log('error retrieving destination ' + destIds[i]);
@@ -72,7 +62,7 @@ function tbdHotel() {
     $.when.apply(null, requests).done(function () {
 	console.log('retrieved all destinations successfully');
 	// do something cool
-	doDisplay();
+	instance.doDisplay();
     }).fail(function () { 
 	// TODO: What to do in this case?
 	console.log('failed');
@@ -80,26 +70,28 @@ function tbdHotel() {
 }
 
 // This jump-starts the display
-function doDisplay() {
-    var originRaw = realTimeArrivals.optionsConfig.origin[0].split(',');
+org.transitappliance.transitboardhotel.prototype.doDisplay = function () {
+    var instance = this;
+
+    var originRaw = this.realTimeArrivals.optionsConfig.origin[0].split(',');
     var origin = new L.LatLng(Number(originRaw[0]), Number(originRaw[1]));
 
     // Init the map
     // allow them to set either a CloudMade style or a custom tile server
-    if (realTimeArrivals.optionsConfig.cloudmadeStyle != undefined) {
+    if (this.realTimeArrivals.optionsConfig.cloudmadeStyle != undefined) {
 	// config section
 	// it'd be better if the key was left as is, so that we can track traffic
 	// style #46244 is the one Matt built for this project
 	var tileUrl = 'http://{s}.tile.cloudmade.com/2d634343963a4426b126ab70b62bba2a/'+
-	    realTimeArrivals.optionsConfig.cloudmadeStyle[0] +
+	    this.realTimeArrivals.optionsConfig.cloudmadeStyle[0] +
 	    '/256/{z}/{x}/{y}.png';
 	
 	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
     }
-    else if (realTimeArrivals.optionsConfig.tileUrl != undefined) {
-	var tileUrl = realTimeArrivals.optionsConfig.tileUrl[0]
-	if (realTimeArrivals.optionsConfig.tileAttr != undefined)
-	    var tileAttr = realTimeArrivals.optionsConfig.tileAttr[0]
+    else if (this.realTimeArrivals.optionsConfig.tileUrl != undefined) {
+	var tileUrl = this.realTimeArrivals.optionsConfig.tileUrl[0]
+	if (this.realTimeArrivals.optionsConfig.tileAttr != undefined)
+	    var tileAttr = this.realTimeArrivals.optionsConfig.tileAttr[0]
 	else var tileAttr = '';
     }
     else {
@@ -111,21 +103,21 @@ function doDisplay() {
 	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade.';
     }    
 
-    addAttribution(tileAttr);
+   this. addAttribution(tileAttr);
 
     var baseLayer = new L.TileLayer(tileUrl, 
 				    {maxZoom: 18});
 
     var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
 				       {maxZoom: 18});
-    addAttribution('Rail line info courtesy TriMet.');
+    this.addAttribution('Rail line info courtesy TriMet.');
 
     // make it block positioned but invisible
     // Leaflet will not init right if we put it in an invisible element
     $('#container').css('opacity', '0').css('display', 'block');
     // add this back
     //{zoomControl: false})
-    map = new L.Map('map', {
+    this.map = new L.Map('map', {
 	attributionControl: false // attr is handled separately.
     })
 	.addLayer(baseLayer)
@@ -137,19 +129,19 @@ function doDisplay() {
     $('#container').css('display', 'none').css('opacity', '1');
 
     // seed the data before we display it
-    updateTripPlans();
+    this.updateTripPlans();
     // TODO: 10 mins correct amount of time?
-    setInterval(updateTripPlans, 10*60*1000);
+    setInterval(this.updateTripPlans, 10*60*1000);
 
-    addAttribution('Weather courtesy Yahoo! Weather.');
-    updateWeather();
+    this.addAttribution('Weather courtesy Yahoo! Weather.');
+    this.updateWeather();
     // update the weather once every 20 minutes
-    setInterval(updateWeather, 20*60*1000);
+    setInterval(this.updateWeather, 20*60*1000);
 
     // set up the info bar
     var hu = $(window).height() / 100;
     $('#bar').height(6*hu);
-    $('#bar-location span').text(realTimeArrivals.optionsConfig.originName[0]);
+    $('#bar-location span').text(this.realTimeArrivals.optionsConfig.originName[0]);
     $('#bar-location').textfill({
 	maxFontPixels: $('#bar').height()
     });
@@ -161,16 +153,17 @@ function doDisplay() {
 	$('#bar-icon img').attr('height', $('#bar').height() - 10);
 
     // update the clock every 15 seconds
-    updateClock();
-    setInterval(updateClock, 15*1000);
+    this.updateClock();
+    setInterval(this.updateClock, 15*1000);
 
     // main loop
-    showDestination(0);
+   this.showDestination(0);
 }
 
-function showDestination(iteration) {
-    var dest = destinations[iteration];
-
+org.transitappliance.transitboardhotel.prototype.showDestination = function (iteration) {
+    var instance = this;
+    var dest = this.destinations[iteration];
+    
     // TODO: check for reasonableness and skip if necessary
 
     // set the sizes
@@ -234,7 +227,7 @@ function showDestination(iteration) {
     $('#trip-details').height(6*hu);
 
     var imageTimeout = 
-	1000 * Number(realTimeArrivals.optionsConfig.imageTimeout || 3);
+	1000 * Number(this.realTimeArrivals.optionsConfig.imageTimeout || 3);
 
     // set slideUps for each image in turn
     var i = 1;
@@ -258,15 +251,16 @@ function showDestination(iteration) {
 	// wait 550 ms, then show the next slide
 	setTimeout(function () {
 	    iteration++;
-	    if (iteration < destinations.length) 
-		showDestination(iteration);
+	    if (iteration < instance.destinations.length) 
+		instance.showDestination(iteration);
 	    else 
-		showAttribution();
+		instance.showAttribution();
 	}, 550);
     }, base + 10*1000);    
 }
 
-function showAttribution () {
+org.transitappliance.transitboardhotel.prototype.showAttribution = function () {
+    var instance = this;
     $('#attribution').fadeIn(500);
     $('#attribution').textfill();
 
@@ -275,12 +269,12 @@ function showAttribution () {
     }, 4500); // show for four seconds, plus fade
 
     setTimeout(function () {
-	showDestination(0);
+	instance.showDestination(0);
     }, 5050); // then show the first destination 50 ms after the fade finishes.
 }
 
 // Add an attribution string
-function addAttribution (attr) {
+org.transitappliance.transitboardhotel.prototype.addAttribution = function (attr) {
     $('#attribution span').append(attr + '<br/>');
     // Can't do textfill here b/c object is likely invisible
 }
@@ -323,12 +317,12 @@ startPlace/endPlace should be the stop or station name.
 
 */
 
-
-function updateTripPlans() {
+org.transitappliance.transitboardhotel.prototype.updateTripPlans = function () {
+    var instance = this;
     console.log('updating trip plans');
 
     // keep a local copy
-    var localDests = destinations;
+    var localDests = this.destinations;
 
     // format the time to TriMet's liking
     // we have to put in a time or we get no results, as documented
@@ -346,10 +340,11 @@ function updateTripPlans() {
 
     // documented at http://developer.trimet.org/ws_docs/tripplanner_ws.shtml
     var tripPlannerParams = {
-	fromPlace: realTimeArrivals.optionsConfig.originName[0],
+	fromPlace: this.realTimeArrivals.optionsConfig.originName[0],
 	// reverse the lat,lon to be lon,lat
-	fromCoord: realTimeArrivals.optionsConfig.origin[0].split(',')[1] 
-	    + ',' + realTimeArrivals.optionsConfig.origin[0].split(',')[0],
+	fromCoord: this.realTimeArrivals.optionsConfig.origin[0].split(',')[1] 
+	    + ',' + 
+	    this.realTimeArrivals.optionsConfig.origin[0].split(',')[0],
 	time: time,
 	min: 'X', // fewest transfers
 	appID: '828B87D6ABC0A9DF142696F76'
@@ -420,6 +415,13 @@ function updateTripPlans() {
 		    console.log('best itinerary for dest ' + 
 				dest.properties.name + ' via ' +
 				bestItin.attr('viaRoute'));
+
+		    // set up the itinerary
+		    var itinOut = {};
+		    itinOut.legs = [];
+		    itinOut.legs.push(
+			{type: 'walk'}
+		    );
 		    
 		    // the itinerary output
 		    localDests[ind].itinerary = {};
@@ -441,14 +443,16 @@ function updateTripPlans() {
 			.replace(/:/g, '%3A');
 
 		    var geomRq = $.ajax({
-			url: 'http://falling-dawn-9259.herokuapp.com/?url=' +
+			url: 'http://localhost:9292/?url=' +
 			    encodeURIComponent(url),
 			dataType: 'json',
 			success: function (data) {
 			    var the_geom = [];
 
-			    // State Plane Oregon North
-			    var source = new Proj4js.Proj('EPSG:2269');
+			    // State Plane Oregon North, NAD83(HARN)
+			    // figured out from
+			    // http://projects.opengeo.org/trimet/browser/resource/trunk/maps/js/tm-all-min.js?rev=69, line 3496
+			    var source = new Proj4js.Proj('EPSG:2913');
 			    // WGS84, will be converted to 3857/900913
 			    // internally
 			    var dest = new Proj4js.Proj('EPSG:4326');
@@ -457,7 +461,7 @@ function updateTripPlans() {
 				data.results[0].points, 
 				function (ptind, pt) {
 				    // pt has x, y
-				    var point = new Proj4js.Point(pt); 
+				    var point = new Proj4js.Point(pt.x, pt.y); 
 				    // acts in place
 				    Proj4js.transform(source, dest, point);
 				    the_geom.push(new L.LatLng(point.x, point.y));
@@ -504,15 +508,16 @@ function updateTripPlans() {
     });
 }
 
-function updateWeather () {
-    weather = {};
+org.transitappliance.transitboardhotel.prototype.updateWeather = function () {
+    var instance = this;
+    this.weather = {};
 
-    var origin = realTimeArrivals.optionsConfig.origin[0].split(',');
+    var origin = this.realTimeArrivals.optionsConfig.origin[0].split(',');
 
     url = '';
 
     // First, get the WOEID, and save it
-    if (weather.woeid == undefined) {
+    if (this.weather.woeid == undefined) {
 	// for now this only works in the US b/c it uses ZIP Codes
 	var woeid_xhr = $.ajax({
 	    // SELECT postal.content FROM geo.places WHERE text="45,-122" LIMIT 1
@@ -521,7 +526,7 @@ function updateWeather () {
 		'%22%20LIMIT%201&format=json',
 	    dataType: 'json',
 	    success: function (data) {
-		weather.woeid = data.query.results.place.postal;
+		instance.weather.woeid = data.query.results.place.postal;
 	    }
 	});
     }
@@ -534,15 +539,16 @@ function updateWeather () {
     $.when(woeid_xhr).done(function () {
 	// SELECT item.condition FROM weather.forecast WHERE location=
 	var url = 'http://query.yahooapis.com/v1/public/yql?q=SELECT%20item.condition%20from%20weather.forecast%20WHERE%20location%3D' +
-	    weather.woeid + '&format=json';
+	    instance.weather.woeid + '&format=json';
 
 	$.ajax({
 	    url: url,
 	    dataType: 'json',
 	    success: function (data) {
-		weather.condition = data.query.results.channel.item.condition;
-		var text = weather.condition.temp + '&deg; F/' +
-		    Math.round((Number(weather.condition.temp) - 32) * (5/9)) +
+		instance.weather.condition = 
+		    data.query.results.channel.item.condition;
+		var text = instance.weather.condition.temp + '&deg; F/' +
+		    Math.round((Number(instance.weather.condition.temp) - 32) * (5/9)) +
 		    '&deg; C';
 		$('#bar-temp span').html(text);
 		$('#bar-temp').textfill({
@@ -609,7 +615,8 @@ function updateWeather () {
 		// was increased by 1px on each iteration, the info bar would
 		// eventually take over the screen.
 
-		$('#bar-icon img').attr('src', icons[weather.condition.code]);
+		$('#bar-icon img')
+		    .attr('src', icons[instance.weather.condition.code]);
 	    }	
 	    // TODO: add fail handler here and above
 	});
@@ -618,7 +625,7 @@ function updateWeather () {
 						    
 
 // update the clock, called every 15s
-function updateClock () {
+org.transitappliance.transitboardhotel.prototype.updateClock = function () {
     var now = localTime();
     // is monday 0 in some places?
     var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -637,3 +644,20 @@ function updateClock () {
     $('#bar-datetime span').text(time);
     $('#bar-datetime').textfill({maxFontPixels: $('#bar').height()});
 }
+
+$(document).ready(function () {
+    var tbdh;
+
+    trArr({
+	configString: window.location.search,
+	displayInterval: 30*1000,
+	displayCallback: function (data) {
+	    // save the real-time arrivals; they will be ref'd later on
+	    // I don't think there's any chance of this being referred to as
+	    tbdh.realTimeArrivals = data;
+	},
+	initializeCallback: function (data) {
+	    tbdh = new org.transitappliance.transitboardhotel(data);
+	}
+    });
+});
