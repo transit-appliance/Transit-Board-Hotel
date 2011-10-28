@@ -101,14 +101,18 @@ org.transitappliance.transitboardhotel.prototype.doDisplay = function () {
 	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade.';
     }    
 
-   this.addAttribution(tileAttr);
+    this.addAttribution(tileAttr);
 
     var baseLayer = new L.TileLayer(tileUrl, 
 				    {maxZoom: 18});
 
-    var transitLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
+    var transitOverlayLayer = new L.TileLayer("gis/trimetTiles/{z}/{x}/{y}.png",
 				       {maxZoom: 18});
     this.addAttribution('Rail line info courtesy TriMet.');
+
+    // initially empty
+    this.walkLayer = new L.MultiPolyline([], {color: 'gray'});
+    this.transitLayer = new L.MultiPolyline([], {color: 'red'});
 
     // make it block positioned but invisible
     // Leaflet will not init right if we put it in an invisible element
@@ -119,17 +123,14 @@ org.transitappliance.transitboardhotel.prototype.doDisplay = function () {
 	attributionControl: false // attr is handled separately.
     })
 	.addLayer(baseLayer)
-	.addLayer(transitLayer)
+	.addLayer(transitOverlayLayer)
+	.addLayer(this.walkLayer)
+	.addLayer(this.transitLayer)
 	.setView(origin, 15);
 
     // make sure we make it visible again! else jQuery will fade it 0 in
     // to 0
     $('#container').css('display', 'none').css('opacity', '1');
-
-    // seed the data before we display it
-    this.updateTripPlans();
-    // TODO: 10 mins correct amount of time?
-    setInterval(this.updateTripPlans, 10*60*1000);
 
     this.addAttribution('Weather courtesy Yahoo! Weather.');
     this.updateWeather();
@@ -154,8 +155,13 @@ org.transitappliance.transitboardhotel.prototype.doDisplay = function () {
     this.updateClock();
     setInterval(this.updateClock, 15*1000);
 
-    // main loop
-   this.showDestination(0);
+    // TODO: 10 mins correct amount of time?
+    setInterval(this.updateTripPlans, 10*60*1000);
+    // seed the data before we display it
+    this.updateTripPlans().done(function () {
+	// main loop
+	instance.showDestination(0);
+    });
 }
 
 org.transitappliance.transitboardhotel.prototype.showDestination = function (iteration) {
@@ -242,6 +248,22 @@ org.transitappliance.transitboardhotel.prototype.showDestination = function (ite
     // this is the time the images are done hiding
     var base = (i * imageTimeout) + 300;
 
+    // First, get all of the geometries on there
+    this.walkLayer.clearLayers();
+    this.transitLayer.clearLayers();
+    $.each(dest.itinerary.legs, function (ind, leg) {
+	if (leg.type == 'walk') {
+	    instance.walkLayer.addLayer(
+		new L.Polyline(leg.geometry)
+	    );
+	}
+	else if (leg.type == 'transit') {
+	    instance.transitLayer.addLayer(
+		new L.Polyline(leg.geometry)
+	    );
+	}
+    });
+
     // Show the next slide
     setTimeout(function () {
 	$('#container').fadeOut(500);
@@ -320,6 +342,9 @@ org.transitappliance.transitboardhotel.prototype.updateTripPlans = function () {
     var instance = this;
     console.log('updating trip plans');
 
+    // the first time, the caller needs to know when this is done
+    var df = $.Deferred();
+
     // keep a local copy
     var localDests = this.destinations;
 
@@ -345,7 +370,10 @@ org.transitappliance.transitboardhotel.prototype.updateTripPlans = function () {
     $.when.apply(null, rqs).done(function () {
 	console.log('finished retrieving destinations');
 	instance.destinations = localDests;
+	df.resolve();
     });
+
+    return df;
 }
 
 /**
@@ -456,9 +484,18 @@ org.transitappliance.transitboardhotel.prototype.getTripPlanOnly = function (des
 		// set up the itinerary, normalize format
 		var itinOut = {};
 		itinOut.fromPlace = data.find('param[name="fromPlace"]').text();
-		itinOut.fromCoord = data.find('param[name="fromCoord"]').text();
+
+
+		// need to switch lat, lon (y, x) to x,y
+		var fromParam = data.find('param[name="fromCoord"]').text()
+		    .split(', ');
+		itinOut.fromCoord = fromParam[1] + ',' + fromParam[0];
 		itinOut.toPlace = data.find('param[name="toPlace"]').text();
-		itinOut.toCoord = data.find('param[name="toCoord"]').text();
+
+		var toParam = data.find('param[name="toCoord"]').text()
+		    .split(', ');
+		// for some reason, toCoord is not in TriMet return XML
+		itinOut.toCoord = dest.geometry.coordinates.join(',');
 
 		// This is the transit leg
 		// for now, safe to assume only one
@@ -476,8 +513,10 @@ org.transitappliance.transitboardhotel.prototype.getTripPlanOnly = function (des
 		// stub out geometry in case it doesn't update
 		var from = transitLeg.fromCoord.split(',');
 		var to = transitLeg.toCoord.split(',');
-		transitLeg.geometry = [new L.LatLng(from[1], from[0]),
-				       new L.LatLng(to[1], to[0])];
+		transitLeg.geometry = [new L.LatLng(Number(from[1]), 
+						  Number(from[0])),
+				     new L.LatLng(Number(to[1]), 
+						  Number(to[0]))];
 		
 		var initWalk = {type: 'walk'}
 		initWalk.fromCoord = itinOut.fromCoord;
@@ -486,8 +525,10 @@ org.transitappliance.transitboardhotel.prototype.getTripPlanOnly = function (des
 		initWalk.toPlace   = transitLeg.fromPlace;
 		var from = initWalk.fromCoord.split(',');
 		var to = initWalk.toCoord.split(',');
-		initWalk.geometry = [new L.LatLng(from[1], from[0]),
-				       new L.LatLng(to[1], to[0])];
+		initWalk.geometry = [new L.LatLng(Number(from[1]), 
+						  Number(from[0])),
+				     new L.LatLng(Number(to[1]), 
+						  Number(to[0]))];
 
 		var finalWalk = {type: 'walk'}
 		finalWalk.toCoord   = itinOut.toCoord;
@@ -496,8 +537,10 @@ org.transitappliance.transitboardhotel.prototype.getTripPlanOnly = function (des
 		finalWalk.fromPlace = transitLeg.toPlace;
 		var from = finalWalk.fromCoord.split(',');
 		var to = finalWalk.toCoord.split(',');
-		finalWalk.geometry = [new L.LatLng(from[1], from[0]),
-				       new L.LatLng(to[1], to[0])];
+		finalWalk.geometry = [new L.LatLng(Number(from[1]), 
+						  Number(from[0])),
+				     new L.LatLng(Number(to[1]), 
+						  Number(to[0]))];
 		
 		itinOut.legs = [initWalk, transitLeg, finalWalk];
 	    }
