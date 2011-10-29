@@ -67,6 +67,9 @@ com.transitboard.hotel = function (realTimeArrivals) {
     });
 }
 
+// util functions in this namespace
+com.transitboard.hotel.prototype.util = {};
+
 // This jump-starts the display
 com.transitboard.hotel.prototype.doDisplay = function () {
     var instance = this;
@@ -332,7 +335,7 @@ Everything for walk, also:
 route
 startId (the stop ID of the start, in the format TriMet:8989
 endId
-stops (the number of stops)
+noStops (the number of stops)
 
 startPlace/endPlace should be the stop or station name.
 
@@ -356,14 +359,14 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
 	// b/c otherwise the callback on the $.when could be called
 	// before the last itinerary had been saved. There is no guarantee
 	// what order callbacks will be executed in, I don't believe
-	var df = $.Deferred();
+	var tp = $.Deferred();
 
 	// returns a deferred, callback will save itinerary
 	var rq = instance.getTripPlanForDest(dest).then(function (itin) {
 	    localDests[ind].itinerary = itin;
-	    df.resolve();
+	    tp.resolve();
 	});
-	rqs.push(df);
+	rqs.push(tp);
     });
 
     // when all the requests return, copy localDests to destinations
@@ -389,9 +392,12 @@ com.transitboard.hotel.prototype.getTripPlanForDest = function (dest) {
     var df = $.Deferred();
 
     this.getTripPlanOnly(dest).then(function (itin) {
-	instance.fillOutGeometries(itin).then(function (itin) {
-	    df.resolve(itin);
-	});
+	if (itin != null) {
+	    instance.fillOutGeometries(itin).then(function (itin) {
+		df.resolve(itin);
+	    });
+	}
+	else df.resolve(null); // no itin found
     });					  
 
     return df;
@@ -497,52 +503,40 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		// for some reason, toCoord is not in TriMet return XML
 		itinOut.toCoord = dest.geometry.coordinates.join(',');
 
-		// This is the transit leg
-		// for now, safe to assume only one
-		var transitLeg = {type: 'transit'};
-		var legXml = bestItin.find('leg').first();
-		transitLeg.fromPlace = legXml.find('from description').text();
-		transitLeg.fromCoord = legXml.find('from pos lon').text() + 
-		    ',' + legXml.find('from pos lat').text();
-		transitLeg.toPlace = legXml.find('to description').text();
-		transitLeg.toCoord = legXml.find('to pos lon').text() + 
-		    ',' + legXml.find('to pos lat').text();
-		transitLeg.time = Number(
-		    legXml.find('time-distance duration').text());
+		itinOut.legs = [];
 
-		// stub out geometry in case it doesn't update
-		var from = transitLeg.fromCoord.split(',');
-		var to = transitLeg.toCoord.split(',');
-		transitLeg.geometry = [new L.LatLng(Number(from[1]), 
-						  Number(from[0])),
-				     new L.LatLng(Number(to[1]), 
-						  Number(to[0]))];
-		
-		var initWalk = {type: 'walk'}
-		initWalk.fromCoord = itinOut.fromCoord;
-		initWalk.fromPlace = itinOut.fromPlace;
-		initWalk.toCoord   = transitLeg.fromCoord;
-		initWalk.toPlace   = transitLeg.fromPlace;
-		var from = initWalk.fromCoord.split(',');
-		var to = initWalk.toCoord.split(',');
-		initWalk.geometry = [new L.LatLng(Number(from[1]), 
-						  Number(from[0])),
-				     new L.LatLng(Number(to[1]), 
-						  Number(to[0]))];
+		// this should work without modification once we allow transfers
+		bestItin.find('leg').each(function (ind, leg) {
+		    leg = $(leg);
+		    var legOut = {};
+		    legOut.fromCoord = leg.find('from pos lon').text() + 
+			',' + leg.find('from pos lat').text();
+		    legOut.fromPlace = leg.find('from description').text();
+		    legOut.toCoord = leg.find('to pos lon').text() + 
+			',' + leg.find('from pos lat').text();
+		    legOut.toPlace = leg.find('to description').text();
+		    var from = instance.util.reverseCoord(legOut.fromCoord)
+			.split(',');
+		    var to = instance.util.reverseCoord(legOut.toCoord)
+			.split(',');
+		    legOut.geometry = [new L.LatLng(Number(from[0]),
+						    Number(from[1])),
+				       new L.LatLng(Number(to[0]), 
+						    Number(to[1]))];
 
-		var finalWalk = {type: 'walk'}
-		finalWalk.toCoord   = itinOut.toCoord;
-		finalWalk.toPlace   = itinOut.toPlace;
-		finalWalk.fromCoord = transitLeg.toCoord;
-		finalWalk.fromPlace = transitLeg.toPlace;
-		var from = finalWalk.fromCoord.split(',');
-		var to = finalWalk.toCoord.split(',');
-		finalWalk.geometry = [new L.LatLng(Number(from[1]), 
-						  Number(from[0])),
-				     new L.LatLng(Number(to[1]), 
-						  Number(to[0]))];
-		
-		itinOut.legs = [initWalk, transitLeg, finalWalk];
+		    if (leg.attr('mode') == 'Walk') {
+			legOut.type = 'walk';
+		    }
+		    else {
+			legOut.type = 'transit'
+			legOut.startId = leg.find('from stopId').text();
+			legOut.endId = leg.find('to stopId').text();
+			legOut.noStops = 
+			    Number(leg.find('to stopSequence')) -
+			    Number(leg.find('from stopSequence'));
+		    }
+		    itinOut.legs.push(legOut);
+		});
 	    }
 	    else {
 		itinOut = null;
@@ -555,6 +549,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 	error: function (x, stat) {
 	    console.log('error loading trip plan for dest ' +
 			dest.properties.name + ': ' + stat);
+	    // TODO: resolve df somehow
 	}
     });		    
     return deferred;
@@ -568,8 +563,153 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
  * completed itinerary.
 */
 com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
+    var instance = this;
     var df = new $.Deferred();
-    df.resolve(itin);
+    var rqs = [];
+
+    $.each(itin.legs, function(ind, leg) {
+	if (leg.type == 'walk') {
+	    var walk = instance.getWalkingDirections(leg.fromCoord, leg.toCoord);
+	    // no need for two deferreds, b/c callbacks are called in order
+	    walk.then(function (result) {
+		itin.legs[ind].geometry = result.geometry;
+		itin.legs[ind].length = result.length;
+	    });
+	    rqs.push(walk);
+	}
+    });	   
+
+    $.when.apply(null, rqs).then(function () {
+	df.resolve(itin);
+    });
+
+    return df;
+}
+
+/**
+ * Reverses the order of coordinates in a coordinate string
+ * @param {string} coord The coordinate to reverse
+ * @returns {string} the reversed coordinates
+*/
+com.transitboard.hotel.prototype.util.reverseCoord = function (coord) {
+    var splitC = coord.split(',');
+    return splitC[1] + ',' + splitC[0];
+}
+
+/**
+ * Decode a MapQuest compressed line into an array of Leaflet LatLngs
+ * Copied almost verbatim from http://soulsolutions.com.au/Default.aspx?tabid=96
+ * @param {string} encoded The encoded string
+ * @returns {L.LatLng[]} the decoded sting
+*/
+com.transitboard.hotel.prototype.util.decodeCompressedLine = function (encoded) {
+    var len = encoded.length;
+    var index = 0;
+    var array = [];
+    var lat = 0;
+    var lng = 0;
+    try
+    {
+        while (index < len) {
+            var b;
+            var shift = 0;
+            var result = 0;
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+	    // modified to use Leaflet
+            array.push(new L.LatLng((lat * 1e-5), (lng * 1e-5)));
+        }
+    } catch(ex)
+    {
+        //error in encoding.
+    }
+    return array;
+}
+
+/**
+ * Get walking directions from fromCoord (x,y/lon,lat) to toCoord
+ * @param {string} fromCoord Such as "-122.123,37.363"
+ * @param {string} toCoord same as fromCoord
+ * @returns {jQuery.Deferred} deferred A Deferred. Callbacks attached will be 
+ * called with an object - .length is the length in meters, and .geometry is an
+ * array of L.LatLng representing the walk geometry
+*/
+com.transitboard.hotel.prototype.walkGeomCache = {};
+com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toCoord) {
+    var instance = this;
+    var df = $.Deferred();
+    
+    // check the cache
+    if (this.walkGeomCache[fromCoord] != undefined) {
+	if (this.walkGeomCache[fromCoord][toCoord] != undefined) {
+	    df.resolve(this.walkGeomCache[fromCoord][toCoord]);
+	    return df; // jump out
+	}
+    }
+
+    $.ajax({
+	url: 'http://open.mapquestapi.com/directions/v0/route',
+	data: {
+	    outFormat: 'json',
+	    from: this.util.reverseCoord(fromCoord),
+	    to: this.util.reverseCoord(toCoord),
+	    //maxLinkId: 0, // don't need link info
+	    routeType: 'pedestrian',
+	    shapeFormat: 'cmp',
+	    units: 'k', // km - metric (SI) system
+	    generalize: 0 // no simplification, we may be quite zoomed in
+	},
+	dataType: 'jsonp',
+	success: function (data) {
+	    console.log('received walk geometry');
+
+	    // check if there was an error
+	    if (data.info.statuscode != 0) {
+		console.log('Error ' + data.info.statuscode +
+			    ' retrieving walk directions from ' +
+			    fromCoord + ' to ' + toCoord + ': ' +
+			    data.info.messages.join('; '));
+	    }
+
+	    // decode the compressed geometry
+	    var geom = instance.util.decodeCompressedLine(
+		data.route.shape.shapePoints
+	    );
+
+	    // add the start and end geometries
+	    // the reason we do this is that MapQuest API snaps to the nearest
+	    // node, which can lead to some odd-looking paths in sparse OSM 
+	    // areas. This will at least give the general idea
+	    var from = instance.util.reverseCoord(fromCoord).split(',');
+	    var to = instance.util.reverseCoord(toCoord).split(',');
+	    geom.unshift(new L.LatLng(Number(from[0]), Number(from[1])));
+	    geom.push(new L.LatLng(Number(to[0]), Number(to[1])));
+
+	    // km to m; if the route is quite short (<500m) we may get 0m;
+	    // also the number may be in error by as much as 500m. Something
+	    // to be aware of.
+	    var length = data.route.distance * 1000; 
+
+	    df.resolve({geometry: geom, length: length});
+	}
+    });
+
     return df;
 }
 
