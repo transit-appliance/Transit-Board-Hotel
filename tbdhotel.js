@@ -267,10 +267,12 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $('#narrative').html('<span>' + narr + '</span>');
 
     // have to do this before setting sizes. You'll never see it it's so fast
-    // fade in, 0.1s
+    // fade in, 0.5s
     $('#container').fadeIn(500);
 
-    $('#main-text').height(10*hu).textfill({maxFontPixels: 10*hu});
+    // allow the subhead to slide over next to the head
+    $('#main-text').height(10*hu).textfill({maxFontPixels: 10*hu})
+	.css('width', $('#main-text span').width() + 'px');
     $('#subhead').height(10*hu).textfill({maxFontPixels: 7*hu});
     $('#head-box').height(10*hu);
 
