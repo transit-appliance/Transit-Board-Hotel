@@ -117,8 +117,8 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     this.addAttribution('Rail line info courtesy TriMet.');
 
     // initially empty
-    this.walkLayer = new L.MultiPolyline([], {color: 'gray'});
-    this.transitLayer = new L.MultiPolyline([], {color: 'red'});
+    this.walkLayer = new L.MultiPolyline([]);
+    this.transitLayer = new L.MultiPolyline([]);
 
     // make it block positioned but invisible
     // Leaflet will not init right if we put it in an invisible element
@@ -260,12 +260,12 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $.each(dest.itinerary.legs, function (ind, leg) {
 	if (leg.type == 'walk') {
 	    instance.walkLayer.addLayer(
-		new L.Polyline(leg.geometry)
+		new L.Polyline(leg.geometry, {color: 'blue'})
 	    );
 	}
 	else if (leg.type == 'transit') {
 	    instance.transitLayer.addLayer(
-		new L.Polyline(leg.geometry)
+		new L.Polyline(leg.geometry, {color: 'red'})
 	    );
 	}
     });
@@ -693,6 +693,7 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 		var geom = [new L.LatLng(Number(from[0]), Number(from[1])),
 			    new L.LatLng(Number(to[0]), Number(to[1]))];
 		df.resolve({geometry: geom, length: null});
+		return;
 	    }
 
 	    // decode the compressed geometry
@@ -716,6 +717,8 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 
 	    // save it in the cache
 	    var route = {geometry: geom, length: length};
+	    if (instance.walkGeomCache[fromCoord] == undefined)
+		instance.walkGeomCache[fromCoord] = [];
 	    instance.walkGeomCache[fromCoord][toCoord] = route;
 	    df.resolve(route);
 	}
