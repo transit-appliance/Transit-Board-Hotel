@@ -65,6 +65,9 @@ com.transitboard.hotel = function (realTimeArrivals) {
 	// TODO: What to do in this case?
 	console.log('failed');
     });
+
+    // add the mapquest attribution
+    this.addAttribution('Walking directions courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">');
 }
 
 // util functions in this namespace
