@@ -516,7 +516,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 			',' + leg.find('from pos lat').text();
 		    legOut.fromPlace = leg.find('from description').text();
 		    legOut.toCoord = leg.find('to pos lon').text() + 
-			',' + leg.find('from pos lat').text();
+			',' + leg.find('to pos lat').text();
 		    legOut.toPlace = leg.find('to description').text();
 		    var from = instance.util.reverseCoord(legOut.fromCoord)
 			.split(',');
@@ -672,7 +672,6 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 	    outFormat: 'json',
 	    from: this.util.reverseCoord(fromCoord),
 	    to: this.util.reverseCoord(toCoord),
-	    //maxLinkId: 0, // don't need link info
 	    routeType: 'pedestrian',
 	    shapeFormat: 'cmp',
 	    units: 'k', // km - metric (SI) system
@@ -688,6 +687,12 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 			    ' retrieving walk directions from ' +
 			    fromCoord + ' to ' + toCoord + ': ' +
 			    data.info.messages.join('; '));
+
+		var from = instance.util.reverseCoord(fromCoord).split(',');
+		var to = instance.util.reverseCoord(toCoord).split(',');
+		var geom = [new L.LatLng(Number(from[0]), Number(from[1])),
+			    new L.LatLng(Number(to[0]), Number(to[1]))];
+		df.resolve({geometry: geom, length: null});
 	    }
 
 	    // decode the compressed geometry
