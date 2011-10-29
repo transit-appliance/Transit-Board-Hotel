@@ -185,7 +185,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	    dest.properties.subtitle.length;
 	// The weighting factors here were found by trial and (mostly) error
 	var percentName = 85 * dest.properties.name.length / totalText;
-	var percentSub = 90 - percentName;
+	var percentSub = 70 - percentName;
     }
     // no subtitle
     else {
