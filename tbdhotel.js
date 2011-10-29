@@ -174,7 +174,25 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     var instance = this;
     var dest = this.destinations[iteration];
     
-    // TODO: check for reasonableness and skip if necessary
+    // this is called if the destination is unreasonable or when it is done
+    var showNext = function () {
+	$('#container').fadeOut(500);
+	
+	// wait 550 ms, then show the next slide
+	setTimeout(function () {
+	    iteration++;
+	    if (iteration < instance.destinations.length) 
+		instance.showDestination(iteration);
+	    else 
+		instance.showAttribution();
+	}, 550)
+    }
+    
+    // no route
+    if (dest.itinerary == null) {
+	showNext();
+	return;
+    }
 
     // set the sizes
     // one height unit = 1%
@@ -221,6 +239,33 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 
     $('#slideshow ul').prepend(html);
 
+    // set up the narrative
+    var narr = '';
+    $.each(dest.itinerary.legs, function (ind, leg) {
+	if (leg.type == 'walk') {
+	    // capitalize first
+	    if (ind == 0) var lett = 'W';
+	    else var lett = 'w';
+	    narr += '<span id="narrative-leg-' + ind + '">' + 
+		lett + 'alk to ' + leg.toPlace + 
+		'</span>, ';
+	}
+	else if (leg.type == 'transit') {
+	    if (ind == 0) var lett = 'B';
+	    else var lett = 'b';
+	    narr += '<span id="narrative-leg-' + ind + '">' + 
+		lett + 'oard ' + leg.headsign +
+		', offboard at ' + leg.toPlace + 
+		' (' + leg.noStops + ' stops)' +
+		'</span>, ';
+	}
+    });
+
+    // get rid of the last ', '
+    narr = narr.slice(0, -2) + '.';
+
+    $('#narrative').html('<span>' + narr + '</span>');
+
     // have to do this before setting sizes. You'll never see it it's so fast
     // fade in, 0.1s
     $('#container').fadeIn(500);
@@ -233,7 +278,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $('#trip-box').height(23*hu);
 
     // nested inside trip-box
-    $('#narrative').height(16*hu);
+    $('#narrative').height(16*hu).textfill();
     $('#trip-details').height(6*hu);
 
     var imageTimeout = 
@@ -271,18 +316,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     });
 
     // Show the next slide
-    setTimeout(function () {
-	$('#container').fadeOut(500);
-	
-	// wait 550 ms, then show the next slide
-	setTimeout(function () {
-	    iteration++;
-	    if (iteration < instance.destinations.length) 
-		instance.showDestination(iteration);
-	    else 
-		instance.showAttribution();
-	}, 550);
-    }, base + 10*1000);    
+    setTimeout(showNext, base + 10*1000);    
 }
 
 com.transitboard.hotel.prototype.showAttribution = function () {
@@ -335,7 +369,9 @@ distance (in meters)
 
 type == 'transit':
 Everything for walk, also:
-route
+route (optional, don't stick a number in here for a line that has a name, like 
+90 for MAX Red Line)
+headsign
 startId (the stop ID of the start, in the format TriMet:8989
 endId
 noStops (the number of stops)
@@ -532,11 +568,12 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		    }
 		    else {
 			legOut.type = 'transit'
+			legOut.headsign = leg.find('route name').text();
 			legOut.startId = leg.find('from stopId').text();
 			legOut.endId = leg.find('to stopId').text();
 			legOut.noStops = 
-			    Number(leg.find('to stopSequence')) -
-			    Number(leg.find('from stopSequence'));
+			    Number(leg.find('to stopSequence').text()) -
+			    Number(leg.find('from stopSequence').text());
 		    }
 		    itinOut.legs.push(legOut);
 		});
