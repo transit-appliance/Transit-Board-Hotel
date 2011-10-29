@@ -714,7 +714,10 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 	    // to be aware of.
 	    var length = data.route.distance * 1000; 
 
-	    df.resolve({geometry: geom, length: length});
+	    // save it in the cache
+	    var route = {geometry: geom, length: length};
+	    instance.walkGeomCache[fromCoord][toCoord] = route;
+	    df.resolve(route);
 	}
     });
 
