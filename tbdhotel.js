@@ -340,10 +340,10 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     // has to be after slideshow
     instance.highlightLeg(0, firstGeom);
 
-    $('#trip-box').height(23*hu);
+    $('#trip-box').height(26*hu);
 
     // nested inside trip-box
-    $('#narrative').height(16*hu).textfill();
+    $('#narrative').height(19*hu).textfill();
     $('#trip-details').height(6*hu).textfill();
 
 }
