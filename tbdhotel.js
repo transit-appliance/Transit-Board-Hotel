@@ -22,7 +22,7 @@ com.transitboard.hotel = function (realTimeArrivals) {
     if (this.realTimeArrivals.optionsConfig.stylesheet != undefined) {
 	for (var i = 0; i < this.realTimeArrivals.optionsConfig.stylesheet.length;
 	     i++)
-	    $('head').append('<link rel="stylesheet" type="text/html" href="'+
+	    $('head').append('<link rel="stylesheet" type="text/css" href="'+
 			   this.realTimeArrivals.optionsConfig.stylesheet[i] +
 			   '" />');
     }
@@ -301,12 +301,12 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	    var geom = new L.Polyline(leg.geometry, {color: 'red'})
 	    instance.transitLayer.addLayer(geom);
 	}
-	// 5s per leg
+	// 12s per leg
 	// highlight the first leg immediately
 	
 	if (ind > 0)
 	    setTimeout(function () { instance.highlightLeg(ind, geom) },
-		       base + (ind * 5000));
+		       base + (ind * 12000));
 	// the first leg is highlighted after the fadein, so save it
 	else
 	    firstGeom = geom;
@@ -314,7 +314,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 
     // Show the next slide
     // 5s per map slide
-    setTimeout(showNext, base + (dest.itinerary.legs.length * 5000));    
+    setTimeout(showNext, base + (dest.itinerary.legs.length * 12000));    
 
     // have to do this before setting sizes. You'll never see it it's so fast
     // fade in, 0.5s
