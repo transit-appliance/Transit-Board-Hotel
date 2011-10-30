@@ -246,14 +246,16 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	    // capitalize first
 	    if (ind == 0) var lett = 'W';
 	    else var lett = 'w';
-	    narr += '<span id="narrative-leg-' + ind + '">' + 
+	    narr += '<span id="narrative-leg-' + ind + 
+		'" class="narrative-leg">' + 
 		lett + 'alk to ' + leg.toPlace + 
 		'</span>, ';
 	}
 	else if (leg.type == 'transit') {
 	    if (ind == 0) var lett = 'B';
 	    else var lett = 'b';
-	    narr += '<span id="narrative-leg-' + ind + '">' + 
+	    narr += '<span id="narrative-leg-' + ind + 
+		'" class="narrative-leg">' + 
 		lett + 'oard ' + leg.headsign +
 		', offboard at ' + leg.toPlace + 
 		' (' + leg.noStops + ' stops)' +
@@ -265,23 +267,6 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     narr = narr.slice(0, -2) + '.';
 
     $('#narrative').html('<span>' + narr + '</span>');
-
-    // have to do this before setting sizes. You'll never see it it's so fast
-    // fade in, 0.5s
-    $('#container').fadeIn(500);
-
-    // allow the subhead to slide over next to the head
-    $('#main-text').height(10*hu).textfill({maxFontPixels: 10*hu})
-	.css('width', $('#main-text span').width() + 'px');
-    $('#subhead').height(10*hu).textfill({maxFontPixels: 7*hu});
-    $('#head-box').height(10*hu);
-
-    $('#slideshow').height(54*hu);
-    $('#trip-box').height(23*hu);
-
-    // nested inside trip-box
-    $('#narrative').height(16*hu).textfill();
-    $('#trip-details').height(6*hu);
 
     var imageTimeout = 
 	1000 * Number(this.realTimeArrivals.optionsConfig.imageTimeout || 3);
@@ -299,26 +284,82 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 
     // Do things with the map
     // this is the time the images are done hiding
-    var base = (i * imageTimeout) + 300;
+    var base = ((i-1) * imageTimeout) + 300;
 
-    // First, get all of the geometries on there
+    // First, get all of the geometries on there, and set timeouts for them to
+    // be activated
     this.walkLayer.clearLayers();
     this.transitLayer.clearLayers();
+    var firstGeom; // this stores the first geometry, which will be shown
+    // as soon as the container fades in
     $.each(dest.itinerary.legs, function (ind, leg) {
 	if (leg.type == 'walk') {
-	    instance.walkLayer.addLayer(
-		new L.Polyline(leg.geometry, {color: 'blue'})
-	    );
+	    var geom = new L.Polyline(leg.geometry, {color: 'blue'})
+	    instance.walkLayer.addLayer(geom);
 	}
 	else if (leg.type == 'transit') {
-	    instance.transitLayer.addLayer(
-		new L.Polyline(leg.geometry, {color: 'red'})
-	    );
+	    var geom = new L.Polyline(leg.geometry, {color: 'red'})
+	    instance.transitLayer.addLayer(geom);
 	}
+	// 5s per leg
+	// highlight the first leg immediately
+	
+	if (ind > 0)
+	    setTimeout(function () { instance.highlightLeg(ind, geom) },
+		       base + (ind * 5000));
+	// the first leg is highlighted after the fadein, so save it
+	else
+	    firstGeom = geom;
     });
 
     // Show the next slide
-    setTimeout(showNext, base + 10*1000);    
+    // 5s per map slide
+    setTimeout(showNext, base + (dest.itinerary.legs.length * 5000));    
+
+    // have to do this before setting sizes. You'll never see it it's so fast
+    // fade in, 0.5s
+    $('#container').fadeIn(500);
+    
+    // allow the subhead to slide over next to the head
+    $('#main-text').height(10*hu).textfill({maxFontPixels: 10*hu})
+	.css('width', $('#main-text span').width() + 'px');
+    $('#subhead').height(10*hu).textfill({maxFontPixels: 7*hu});
+    $('#head-box').height(10*hu);
+
+    $('#slideshow').height(54*hu);
+    // highlight the first leg
+    // has to be after slideshow
+    instance.highlightLeg(0, firstGeom);
+
+    $('#trip-box').height(23*hu);
+
+    // nested inside trip-box
+    $('#narrative').height(16*hu).textfill();
+    $('#trip-details').height(6*hu);
+
+}
+
+/**
+ * Highlight the given leg of the itinerary
+ * @param {number} index The index of the leg
+ * @param {L.Polyline} legGeom The leg geometry in an L.Polyline
+*/
+com.transitboard.hotel.prototype.highlightLeg = function (index, legGeom) {
+    $('.narrative-leg').removeClass('narrative-highlighted');
+    $('#narrative-leg-' + index).addClass('narrative-highlighted');
+    this.zoomToBounds(legGeom.getBounds());
+}
+
+/**
+ * Zoom the map to the given bounds
+ * @param {L.LatLngBounds} bounds The bounds to zoom to
+*/
+com.transitboard.hotel.prototype.zoomToBounds = function (bounds) {
+    // make sure the map is using its current size; it gets confused
+    // sometimes what with the hide/unhide
+    this.map.invalidateSize();
+    var z = this.map.getBoundsZoom(bounds);
+    this.map.setView(bounds.getCenter(), z);
 }
 
 com.transitboard.hotel.prototype.showAttribution = function () {

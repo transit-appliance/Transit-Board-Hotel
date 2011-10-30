@@ -51,6 +51,8 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;}
 
 .photo { text-align: center }
 
+.narrative-highlighted { color: #009900 }
+
 .slideshow ul li {
     margin-left: 0; margin-right: 0; border-left: 0; border-right: 0;
     padding-left: 0; padding-right:0; }
