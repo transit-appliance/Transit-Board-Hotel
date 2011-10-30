@@ -371,8 +371,7 @@ distance (in meters)
 
 type == 'transit':
 Everything for walk, also:
-route (optional, don't stick a number in here for a line that has a name, like 
-90 for MAX Red Line)
+routeId (The route ID, not publically shown)
 headsign
 startId (the stop ID of the start, in the format TriMet:8989
 endId
@@ -510,10 +509,22 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 	    data.find('itinerary').each(function(ind, itin) {
 		itin = $(itin);
 		// make sure it fits hard requirements (0 transfers,
-		// allowed stop)
+		// allowed stop), frequent service
 		// TODO: allowed stop
 		if (itin.find('numberOfTransfers').text() != '0')
 		    return;
+
+		// route 90 is an alternate number for MAX
+		var freqService = ['4', '6', '8', '9', '12', '14',
+				   '15', '33', '54', '56', '57',
+				   '72', '75', '90', 'MAX', 'Streetcar'];
+		if ($.inArray(itin.find('leg route number').text(), 
+			      freqService) == -1) {
+		    console.log('route ' + 
+				itin.find('leg route number').text() +
+				' is not Frequent Service');
+		    return;
+		}
 		
 		// TODO: weights?
 		var cost = Number(itin.find('time-distance duration').first().text()) +
@@ -573,6 +584,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 			legOut.headsign = leg.find('route name').text();
 			legOut.startId = leg.find('from stopId').text();
 			legOut.endId = leg.find('to stopId').text();
+			legOut.routeId = leg.find('route number').text();
 			legOut.noStops = 
 			    Number(leg.find('to stopSequence').text()) -
 			    Number(leg.find('from stopSequence').text());
