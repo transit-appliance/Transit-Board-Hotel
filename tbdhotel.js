@@ -240,6 +240,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $('#slideshow ul').prepend(html);
 
     // set up the narrative
+    var time = 0;
     var narr = '';
     $.each(dest.itinerary.legs, function (ind, leg) {
 	if (leg.type == 'walk') {
@@ -261,12 +262,20 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 		' (' + leg.noStops + ' stops)' +
 		'</span>, ';
 	}
+	time += leg.time;
     });
 
     // get rid of the last ', '
     narr = narr.slice(0, -2) + '.';
+    
+    // set up the trip details
+    var fare = dest.itinerary.fare;
 
     $('#narrative').html('<span>' + narr + '</span>');
+
+    $('#trip-details').html('<span><span class="trip-time">' + Math.round(time) + ' min</span>'+
+			    // TODO: i10n
+			    '<span class="trip-fare">$' + fare.toFixed(2) + ' USD each way</span></span>');
 
     var imageTimeout = 
 	1000 * Number(this.realTimeArrivals.optionsConfig.imageTimeout || 3);
@@ -335,7 +344,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 
     // nested inside trip-box
     $('#narrative').height(16*hu).textfill();
-    $('#trip-details').height(6*hu);
+    $('#trip-details').height(6*hu).textfill();
 
 }
 
@@ -596,6 +605,9 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		// for some reason, toCoord is not in TriMet return XML
 		itinOut.toCoord = dest.geometry.coordinates.join(',');
 
+		// use the total fare
+		itinOut.fare = Number(bestItin.find('fare regular').first().text());
+
 		itinOut.legs = [];
 
 		// this should work without modification once we allow transfers
@@ -623,6 +635,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		    else {
 			legOut.type = 'transit'
 			legOut.headsign = leg.find('route name').text();
+			legOut.time = Number(leg.find('time-distance duration').text());
 			legOut.startId = leg.find('from stopId').text();
 			legOut.endId = leg.find('to stopId').text();
 			legOut.routeId = leg.find('route number').text();
@@ -669,6 +682,7 @@ com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
 	    walk.then(function (result) {
 		itin.legs[ind].geometry = result.geometry;
 		itin.legs[ind].length = result.length;
+		itin.legs[ind].time = result.time;
 	    });
 	    rqs.push(walk);
 	}
@@ -738,6 +752,28 @@ com.transitboard.hotel.prototype.util.decodeCompressedLine = function (encoded) 
 }
 
 /**
+ * Get the distance from one lat/lon to another, in meters
+ * Currently assumes WGS84 LatLngs in the State Plane Oregon North area
+ * If conditions are met, results will have error <= 1 part in 10,000
+ * @param {L.LatLng} from
+ * @param {L.LatLng} to
+*/
+com.transitboard.hotel.prototype.util.distanceBetween = function (from, to) {
+    var startPt = new Proj4js.Point(from.lng, from.lat);
+    var endPt = new Proj4js.Point(to.lng, to.lat);
+    var wgs84 = new Proj4js.Proj('EPSG:4326');
+    // State Plane OR N - feet. TriMet specific.
+    var sporn = new Proj4js.Proj('EPSG:2913');
+    Proj4js.transform(wgs84, sporn, startPt);
+    Proj4js.transform(wgs84, sporn, endPt);
+    
+    // now we can get the distance in feet using the Pythagoream Theorem
+    var distance = Math.sqrt(Math.pow((startPt.x - endPt.x), 2) + Math.pow((startPt.y - endPt.y), 2));
+    // convert to meters
+    return 0.3048 * distance;
+}
+
+/**
  * Get walking directions from fromCoord (x,y/lon,lat) to toCoord
  * @param {string} fromCoord Such as "-122.123,37.363"
  * @param {string} toCoord same as fromCoord
@@ -784,7 +820,13 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 		var to = instance.util.reverseCoord(toCoord).split(',');
 		var geom = [new L.LatLng(Number(from[0]), Number(from[1])),
 			    new L.LatLng(Number(to[0]), Number(to[1]))];
-		df.resolve({geometry: geom, length: null});
+
+		// in an Old World street grid, the maximum distance between two points is 
+		// 2^(1/2) * air distance
+		var dist = 1.41421 * instance.util.distanceBetween(geom[0], geom[1]);
+
+		// 53 m/min ~= 2 mph
+		df.resolve({geometry: geom, length: dist, time: dist / 53});
 		return;
 	    }
 
@@ -808,7 +850,7 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 	    var length = data.route.distance * 1000; 
 
 	    // save it in the cache
-	    var route = {geometry: geom, length: length};
+	    var route = {geometry: geom, length: length, time: data.route.time/60};
 	    if (instance.walkGeomCache[fromCoord] == undefined)
 		instance.walkGeomCache[fromCoord] = [];
 	    instance.walkGeomCache[fromCoord][toCoord] = route;
