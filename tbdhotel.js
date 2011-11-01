@@ -410,7 +410,11 @@ com.transitboard.hotel.prototype.zoomToBounds = function (bounds, panZoom) {
     // make sure the map is using its current size; it gets confused
     // sometimes what with the hide/unhide
     this.map.invalidateSize();
-    var z = this.map.getBoundsZoom(bounds);
+    // it will implicitly convert the list to a number; if you specify
+    // maxZoom 2+ times, behavior is undefined
+    var maxZoom = Number(this.realTimeArrivals.optionsConfig.maxZoom || 16);
+    // don't overzoom
+    var z = Math.min(this.map.getBoundsZoom(bounds), maxZoom);
     this.map.setView(bounds.getCenter(), z, !panZoom);
 }
 
