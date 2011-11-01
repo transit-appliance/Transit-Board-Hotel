@@ -232,9 +232,19 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     for (var i = 1; i <= 4; i++) {
 	// stored as image[1...4]_url, since it comes from a Shapefile
 	var imageUrl = dest.properties['image' + i + '_url'];
-	if (imageUrl != null)
-	    html += '<li class="photo">'+
-	    '<img src="' + imageUrl + '" height="' + hu*52 + '"/></li>\n';
+	// was _attribution
+	var imageAttr = dest.properties['image' + i + '_att'];
+	// was _source_url
+	var imageAttrUrl = dest.properties['image' + i + '_sou'];
+	if (imageUrl != null) {
+	    // figure out the scaling
+	    
+	    html += '<li class="photo" width="100%" height="100%">' +
+	    '<a href="' + imageAttrUrl + '">' +
+	    '<span class="photo_attribution">' + imageAttr + '</span>' +
+	    '<img src="' + imageUrl + '" />' +
+	    '</li></a>\n';
+	}
     }
 
     $('#slideshow ul').prepend(html);
@@ -279,12 +289,12 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 
     var imageTimeout = 
 	1000 * Number(this.realTimeArrivals.optionsConfig.imageTimeout || 3);
-
-    // set slideUps for each image in turn
+   // set slideUps for each image in turn
     var i = 1;
     $('.photo').each(function () {
 	// this is a DOM element, not a jquery element
 	var photo = $(this);
+
 	setTimeout(function () {
 	    photo.slideUp(300);
 	}, i * imageTimeout);
@@ -312,9 +322,9 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	}
 	// 12s per leg
 	// highlight the first leg immediately
-	
+	// do pan and zoom
 	if (ind > 0)
-	    setTimeout(function () { instance.highlightLeg(ind, geom) },
+	    setTimeout(function () { instance.highlightLeg(ind, geom, true) },
 		       base + (ind * 12000));
 	// the first leg is highlighted after the fadein, so save it
 	else
@@ -335,10 +345,33 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $('#subhead').height(10*hu).textfill({maxFontPixels: 7*hu});
     $('#head-box').height(10*hu);
 
+    $('#photo-attribution').css('font-size', 4*hu + 'px');
+
     $('#slideshow').height(54*hu);
+    // center the image with 30% above and 70% below
+    $('.photo a img').each(function (ind, photo) {
+	photo = $(photo);
+
+	var viewport = {x: $('#slideshow').width(), y: $('#slideshow').height()};
+	// figure out the vertical and horizontal scaling to get a 10% crop on each side
+	// (the max acceptable) and then use the smaller scaling factor
+	var photoSize = {x: photo.width(), y: photo.height()};
+
+	var vert = (1.2 * viewport.y)/photoSize.y;
+	var horiz = (1.2 * viewport.x)/photoSize.x;
+	var scale = Math.min (vert, horiz);
+	
+	photo.css('width', String(photoSize.x * scale) + 'px');
+	// center
+	photo.css('position', 'relative')
+	    .css('top', -0.5*(photo.height() - viewport.y) + 'px')
+	    .css('left', -0.5*(photo.width() - viewport.x) + 'px');
+    });
+
     // highlight the first leg
     // has to be after slideshow
-    instance.highlightLeg(0, firstGeom);
+    // don't pan and zoom
+    instance.highlightLeg(0, firstGeom, false);
 
     $('#trip-box').height(26*hu);
 
@@ -352,23 +385,25 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
  * Highlight the given leg of the itinerary
  * @param {number} index The index of the leg
  * @param {L.Polyline} legGeom The leg geometry in an L.Polyline
+ * @param {boolean} panZoom Whether to pan and zoom
 */
-com.transitboard.hotel.prototype.highlightLeg = function (index, legGeom) {
+com.transitboard.hotel.prototype.highlightLeg = function (index, legGeom, panZoom) {
     $('.narrative-leg').removeClass('narrative-highlighted');
     $('#narrative-leg-' + index).addClass('narrative-highlighted');
-    this.zoomToBounds(legGeom.getBounds());
+    this.zoomToBounds(legGeom.getBounds(), panZoom);
 }
 
 /**
  * Zoom the map to the given bounds
  * @param {L.LatLngBounds} bounds The bounds to zoom to
+ * @param {boolean} panZoom Whether to pan and zoom the map
 */
-com.transitboard.hotel.prototype.zoomToBounds = function (bounds) {
+com.transitboard.hotel.prototype.zoomToBounds = function (bounds, panZoom) {
     // make sure the map is using its current size; it gets confused
     // sometimes what with the hide/unhide
     this.map.invalidateSize();
     var z = this.map.getBoundsZoom(bounds);
-    this.map.setView(bounds.getCenter(), z);
+    this.map.setView(bounds.getCenter(), z, !panZoom);
 }
 
 com.transitboard.hotel.prototype.showAttribution = function () {
