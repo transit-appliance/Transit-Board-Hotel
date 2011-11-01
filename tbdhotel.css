@@ -45,7 +45,7 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;}
 
 .slideshow ul { list-style: none;  padding-left: 0px; }
 
-.photo { overflow: hidden }
+.photo { overflow: hidden; }
 .photo_attribution { position: absolute; right: 0px; top: 0px; 
 		     background-color: #000044; color: #ffffff; 
 		     border: 6px; link-style: none;
