@@ -596,14 +596,9 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 	toCoord: dest.geometry.coordinates.join(',')
     };
 
-    // can't use data arg to ajax b/c we're going to a proxy
-    var url = 'http://developer.trimet.org/ws/V1/trips/tripplanner' + '?' +
-	jQuery.param(tripPlannerParams);
-
     var rq = $.ajax({
-	// Quick proxy Matt wrote and put on Heroku
-	url: 'http://falling-dawn-9259.herokuapp.com/?url=' + 
-	    encodeURIComponent(url),
+	url: 'http://developer.trimet.org/ws/V1/trips/tripplanner',
+	data: tripPlannerParams,
 	dataType: 'xml',
 	timeout: 100000,
 	success: function (data) {
