@@ -345,7 +345,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $('#subhead').height(10*hu).textfill({maxFontPixels: 7*hu});
     $('#head-box').height(10*hu);
 
-    $('#photo-attribution').css('font-size', 4*hu + 'px');
+    $('.photo-attribution').css('font-size', 4*hu + 'px');
 
     $('#slideshow').height(54*hu);
 
@@ -370,6 +370,10 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	photo.css('position', 'relative')
 	    .css('top', -0.5*(photo.height() - viewport.y) + 'px')
 	    .css('left', -0.5*(photo.width() - viewport.x) + 'px');
+
+	// keep the attribution on top of the image
+	photo.parent().find('.photo_attribution')
+	    .css('right', -0.5*(photo.width() - viewport.x) + 'px');
     });
 
     // highlight the first leg
