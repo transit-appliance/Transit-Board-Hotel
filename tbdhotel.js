@@ -348,17 +348,21 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $('#photo-attribution').css('font-size', 4*hu + 'px');
 
     $('#slideshow').height(54*hu);
-    // center the image with 30% above and 70% below
+
+    var viewport = {x: $('#slideshow').width(), y: $('#slideshow').height()};
+    // set the height of the li so that the next image is pushed down
+    // out of sight.
+    $('.photo').css('height', (viewport.y + 15) + 'px');
+
     $('.photo a img').each(function (ind, photo) {
 	photo = $(photo);
 
-	var viewport = {x: $('#slideshow').width(), y: $('#slideshow').height()};
-	// figure out the vertical and horizontal scaling to get a 10% crop on each side
+	// figure out the vertical and horizontal scaling to get a 15% crop on each side
 	// (the max acceptable) and then use the smaller scaling factor
 	var photoSize = {x: photo.width(), y: photo.height()};
 
-	var vert = (1.2 * viewport.y)/photoSize.y;
-	var horiz = (1.2 * viewport.x)/photoSize.x;
+	var vert = (1.3 * viewport.y)/photoSize.y;
+	var horiz = (1.3 * viewport.x)/photoSize.x;
 	var scale = Math.min (vert, horiz);
 	
 	photo.css('width', String(photoSize.x * scale) + 'px');
