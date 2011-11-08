@@ -14,7 +14,8 @@
    limitations under the License.
 */
 
-body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;}
+body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0; 
+       cursor: none}
 .head { font-size: 64pt; float: left}
 .subhead { font-size: 28pt; float: left; text-transform: lowercase;
 	   vertical-align: bottom; padding-left: 5px}
@@ -46,6 +47,7 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;}
 .slideshow ul { list-style: none;  padding-left: 0px; }
 
 .photo { overflow: hidden; }
+.photo a { cursor: none; }
 .photo_attribution { position: absolute; right: 0px; top: 0px; 
 		     background-color: #000044; color: #ffffff; 
 		     border: 6px; link-style: none;
