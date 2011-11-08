@@ -1,9 +1,0 @@
-{
-"type": "FeatureCollection",
-"features": [
-{ "type": "Feature", "properties": { "id": 0, "name": "Pioneer Square", "subtitle": "Portland's Living Room", "image1_url": null, "image2_url": null, "image3_url": null, "image4_url": null }, "geometry": { "type": "Point", "coordinates": [ -122.679373, 45.518851 ] } }
-,
-{ "type": "Feature", "properties": { "id": 1, "name": "City Hall", "subtitle": null, "image1_url": null, "image2_url": null, "image3_url": null, "image4_url": null }, "geometry": { "type": "Point", "coordinates": [ -122.679609, 45.515171 ] } }
-
-]
-}
