@@ -489,6 +489,8 @@ headsign
 startId (the stop ID of the start, in the format TriMet:8989
 endId
 noStops (the number of stops)
+blockGeoWS (the param for BlockGeoWS, as returned by the TriMet API. Will be
+  retired when OTP hits the scene. Looks like 9045,A,2:12 PM,10579,2:26 PM,8370)
 
 startPlace/endPlace should be the stop or station name.
 
@@ -700,6 +702,8 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 			legOut.noStops = 
 			    Number(leg.find('to stopSequence').text()) -
 			    Number(leg.find('from stopSequence').text());
+			// for the geometries
+			legOut.blockGeoWS = leg.find('lineURL').attr('param');
 		    }
 		    itinOut.legs.push(legOut);
 		});
@@ -735,15 +739,21 @@ com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
 
     $.each(itin.legs, function(ind, leg) {
 	if (leg.type == 'walk') {
-	    var walk = instance.getWalkingDirections(leg.fromCoord, leg.toCoord);
-	    // no need for two deferreds, b/c callbacks are called in order
-	    walk.then(function (result) {
-		itin.legs[ind].geometry = result.geometry;
-		itin.legs[ind].length = result.length;
-		itin.legs[ind].time = result.time;
-	    });
-	    rqs.push(walk);
+	    var rq = instance.getWalkingDirections(leg.fromCoord, leg.toCoord);
 	}
+	else if (leg.type == 'transit') {
+	    // it will return just like getWalkingDirections:
+	    // {geometry: L.LatLng[], length: (int in m), time: (int in min)}
+	    var rq = instance.getTransitGeometry(leg);
+	}
+	 
+	// no need for two deferreds, b/c callbacks are called in order
+	rq.then(function (result) {
+	    itin.legs[ind].geometry = result.geometry;
+	    itin.legs[ind].length = result.length;
+	    itin.legs[ind].time = result.time;
+	});
+	rqs.push(rq);
     });	   
 
     $.when.apply(null, rqs).then(function () {
@@ -919,6 +929,64 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
     return df;
 }
 
+/** 
+ * Get the geometry for a transit leg from TriMet BlockGeoWS,
+ * using JSON-P
+ * @param {object} leg A standard leg object as used elsewhere in the app, 
+ * presumably with geometry, length and time undefined (but the fcn won't check)
+ * @returns {jQuery.Deferred} A deferred that will resolve with the argument
+ * {geometry: L.LatLng[], length: (int m), time: (int mins)}
+*/
+com.transitboard.hotel.prototype.getTransitGeometry = function (leg) {
+    var instance = this;
+    var df = new $.Deferred();
+    
+    $.ajax({
+	url: 'http://maps.trimet.org/ttws/transweb/ws/V1/BlockGeoWS/',
+	data: {
+	    appID: '828B87D6ABC0A9DF142696F76',
+	    // I think this stands for block, start time, start stop ID, 
+	    // end time, end ID.
+	    bksTsIDeTeID: leg.blockGeoWS
+	},
+	dataType: 'jsonp',
+	success: function (data) {
+	    // reasonable defaults
+	    var retval = {geometry: leg.geometry, time: leg.time, distance: 0};
+	    if (data.results[0].error != undefined) {
+		console.log('Error retrieving transit geometry using arg ' +
+			    leg.blockGeoWS);
+		// fall back to point-to-point
+		df.resolve(retval);
+		return;
+	    }
+
+	    // reproject OSPN -> 4326 Lat Lon
+	    var the_geom = [];
+
+	    // Oregon State Plane North, NAD83(HARN)
+	    var from_proj = new Proj4js.Proj('EPSG:2913');
+	    var to_proj = new Proj4js.Proj('EPSG:4326');
+
+	    // should only be one result for a single leg
+	    $.each(data.results[0].points, function (ind, pt) {
+		var point = new Proj4js.Point(pt.x, pt.y);
+		Proj4js.transform(from_proj, to_proj, point);
+		console.log('transformed ' + pt.x + ',' + pt.y + ' to ' +
+			    point.x + ',' + point.y);
+		the_geom.push(new L.LatLng(point.y, point.x));
+	    });
+
+	    retval.geometry = the_geom;
+	    // the defaults should be fine for time, leave distance at 0 for now
+	    // TODO: calculate distance
+	    df.resolve(retval);
+	}
+    });
+
+    return df;
+}
+
 com.transitboard.hotel.prototype.updateWeather = function () {
     var instance = this;
     this.weather = {};
@@ -1053,7 +1121,7 @@ com.transitboard.hotel.prototype.updateClock = function () {
 	mins + ' ' + ap;
 
     $('#bar-datetime span').text(time);
-    $('#bar-datetime').textfill({maxFontPixels: $('#bar').height()});
+    $('#bar-datetime').textfill({maxFontPixels: $('#bar').height() - 5});
 }
 
 $(document).ready(function () {
