@@ -972,8 +972,10 @@ com.transitboard.hotel.prototype.getTransitGeometry = function (leg) {
 	    $.each(data.results[0].points, function (ind, pt) {
 		var point = new Proj4js.Point(pt.x, pt.y);
 		Proj4js.transform(from_proj, to_proj, point);
-		console.log('transformed ' + pt.x + ',' + pt.y + ' to ' +
-			    point.x + ',' + point.y);
+		// commented out because it produces thousands upon 
+		// thousands of lines of output
+		/*console.log('transformed ' + pt.x + ',' + pt.y + ' to ' +
+			    point.x + ',' + point.y);*/
 		the_geom.push(new L.LatLng(point.y, point.x));
 	    });
 
