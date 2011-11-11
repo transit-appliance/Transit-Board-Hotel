@@ -624,6 +624,10 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		if (itin.find('numberOfTransfers').text() != '0')
 		    return;
 
+		// We don't handle throughroutes yet (issue 43)
+		if (Number(itin.find('numberOfTripLegs').text()) > 3)
+		    console.log('Too many trip legs, probably issue 43!');
+
 		// route 90 is an alternate number for MAX
 		var freqService = ['4', '6', '8', '9', '12', '14',
 				   '15', '33', '54', '56', '57',
@@ -988,6 +992,23 @@ com.transitboard.hotel.prototype.getTransitGeometry = function (leg) {
 
     return df;
 }
+
+/**
+ * Get real time arrivals for a given stop and line
+ * It is assumed that the headsign that is passed in is the same as the
+ * one returned by the trip planning service. It is further assumed that the
+ * stopId is one that arrivals have been requested for; this function will 
+ * return null (not undefined) if it is not.
+ * @param {string} stopId The stop ID arrivals are being requested for
+ * @param {string} route The route this vehicle is serving
+ * @param {string} headsign The headsign of the requested vehicle
+ */
+com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId, 
+								  route, 
+								  headsign) {
+    
+}
+ 
 
 com.transitboard.hotel.prototype.updateWeather = function () {
     var instance = this;
