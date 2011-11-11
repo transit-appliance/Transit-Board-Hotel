@@ -625,8 +625,10 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		    return;
 
 		// We don't handle throughroutes yet (issue 43)
-		if (Number(itin.find('numberOfTripLegs').text()) > 3)
+		if (Number(itin.find('numberOfTripLegs').text()) > 3) {
 		    console.log('Too many trip legs, probably issue 43!');
+		    return;
+		}
 
 		// route 90 is an alternate number for MAX
 		var freqService = ['4', '6', '8', '9', '12', '14',
@@ -997,15 +999,21 @@ com.transitboard.hotel.prototype.getTransitGeometry = function (leg) {
  * Get real time arrivals for a given stop and line
  * It is assumed that the headsign that is passed in is the same as the
  * one returned by the trip planning service. It is further assumed that the
- * stopId is one that arrivals have been requested for; this function will 
- * return null (not undefined) if it is not.
+ * stopId is one that arrivals have been requested for; no checking is 
+ * performed
  * @param {string} stopId The stop ID arrivals are being requested for
  * @param {string} route The route this vehicle is serving
  * @param {string} headsign The headsign of the requested vehicle
+ * @returns {arrivalsQueue} A queue of transit arrivals.
  */
 com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId, 
 								  route, 
 								  headsign) {
+    // TODO: order for efficiency?
+    return this.realTimeArrivals.arrivalsQueue
+	.byStop()[stopId]
+	.byLine()[route]
+	.byDest()[headsign]; // this really means byHeadsign
     
 }
  
