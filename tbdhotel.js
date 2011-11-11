@@ -632,10 +632,10 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		var freqService = ['4', '6', '8', '9', '12', '14',
 				   '15', '33', '54', '56', '57',
 				   '72', '75', '90', 'MAX', 'Streetcar'];
-		if ($.inArray(itin.find('leg route number').text(), 
+		if ($.inArray(itin.find('leg route number').first().text(), 
 			      freqService) == -1) {
 		    console.log('route ' + 
-				itin.find('leg route number').text() +
+				itin.find('leg route number').first().text() +
 				' is not Frequent Service');
 		    return;
 		}
