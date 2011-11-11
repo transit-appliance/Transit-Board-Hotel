@@ -284,7 +284,17 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	    narr += '<span id="narrative-leg-' + ind + 
 		'" class="narrative-leg">' + 
 		lett + 'oard ' + leg.headsign +
-		', offboard at ' + leg.toPlace + 
+		' <span class="rtarrivals">(next: ' + 
+		// agency is hard-wired for now
+		instance.formatArrivals(
+		    instance.getRealTimeArrivals(
+			'TriMet:' + leg.startId,
+			leg.routeId,
+			leg.headsign
+		    )
+		) +
+		')</span>,' +
+		' offboard at ' + leg.toPlace + 
 		' (' + leg.noStops + ' stops)' +
 		'</span>, ';
 	}
@@ -631,13 +641,21 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		}
 
 		// route 90 is an alternate number for MAX
+		// 90: MAX Red Line
+		// 100: MAX Blue Line
+		// 190: MAX Yellow Line
+		// 193: Streetcar
+		// 200: MAX Green Line
 		var freqService = ['4', '6', '8', '9', '12', '14',
 				   '15', '33', '54', '56', '57',
-				   '72', '75', '90', 'MAX', 'Streetcar'];
-		if ($.inArray(itin.find('leg route number').first().text(), 
+				   '72', '75', '90', '100', '190', '193',
+				   '200'];
+		if ($.inArray(itin.find('leg route internalNumber')
+			      .first().text(), 
 			      freqService) == -1) {
 		    console.log('route ' + 
-				itin.find('leg route number').first().text() +
+				itin.find('leg route internalNumber')
+				.first().text() +
 				' is not Frequent Service');
 		    return;
 		}
@@ -704,7 +722,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 			legOut.time = Number(leg.find('time-distance duration').text());
 			legOut.startId = leg.find('from stopId').text();
 			legOut.endId = leg.find('to stopId').text();
-			legOut.routeId = leg.find('route number').text();
+			legOut.routeId = leg.find('route internalNumber').text();
 			legOut.noStops = 
 			    Number(leg.find('to stopSequence').text()) -
 			    Number(leg.find('from stopSequence').text());
@@ -1010,13 +1028,34 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
 								  route, 
 								  headsign) {
     // TODO: order for efficiency?
-    return this.realTimeArrivals.arrivalsQueue
-	.byStop()[stopId]
-	.byLine()[route]
-	.byDest()[headsign]; // this really means byHeadsign
-    
+    try {
+	return this.realTimeArrivals.arrivalsQueue
+	    .byStop()[stopId]
+	    .byLine()[Number(route)] // TODO: make sure this always works
+	    .byDest()[headsign]; // this really means byHeadsign
+    }
+    catch (err) {
+	// return an empty arrivalsQueue
+	console.log('no arrivals found');
+	return new arrivalsQueue();
+    }
 }
  
+/**
+ * Format an arrivalsQueue into a string. For now, it assumes the queue is
+ * uniform, i.e. all the trips are the same except at different times. It 
+ * ignores the headsigns, &c.
+ * @param {arrivalsQueue} arrivals
+ * @returns {string} like 'Arr, 3 min, 5 min, 8 min, 10 min'
+*/
+com.transitboard.hotel.prototype.formatArrivals = function (arrivals) {
+    var retval = ''
+    $.each(arrivals, function (ind, arr) {
+	retval += arr.minutes() + '&nbsp;min, '
+    });
+    // get rid of the last ', '
+    return retval.slice(0, -2);
+}
 
 com.transitboard.hotel.prototype.updateWeather = function () {
     var instance = this;

@@ -60,6 +60,9 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;
 
 .narrative-highlighted { color: #009900 }
 
+/* the real time arrivals, in parens */
+.rtarrivals { font-size: 65%; color: #333333}
+
 /* position is relative so that the attr will be positioned relative to the
    slide */
 .slideshow ul li {
