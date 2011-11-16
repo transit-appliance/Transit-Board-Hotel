@@ -1,0 +1,68 @@
+<!-- [compilehidden] -->
+<script type="text/javascript"
+    src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript"
+    src="http://code.jquery.com/jquery-1.7.min.js"></script>
+<script type="text/javascript"
+    src="config.js"></script>
+<!-- [/compilehidden] -->
+
+<table>
+  <tr>
+    <td><label for="originName">
+	Human-readable location of the appliance:
+    </label></td>
+    <td><input type="text" width="80" id="originName" name="originName" /></td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div id="tbdhmap" style="width: 600px; height: 400px"></div>
+      <input type="hidden" name="origin" id="origin" />
+    </td>
+  </tr>
+  <tr>
+    <td><label for="destinations">
+	The destinations to display:
+    </label></td>
+    <td><input type="text" width="80" id="destinations" name="destinations" /></td>
+  </tr>
+  <tr>
+    <!-- This needs to be able to be specified multiple times -->
+    <td><label for="stylesheet">
+	Custom CSS Stylesheet:
+    </label></td>
+    <td><input type="text" width="80" id="stylesheet" name="stylesheet" /></td>
+  </tr>
+  <tr>
+    <td><label for="imageTimeout">
+	The timeout for the slideshow: 
+    </label></td>
+    <td><input type="text" width="6" id="imageTimeout" name="imageTimeout" /></td>
+  </tr>
+  <!-- Map Options -->
+  <tr>
+    <td><label for="cloudmadeStyle">
+	The CloudMade style ID for the basemap:
+    </label></td>
+    <td><input type="text" width="6" id="cloudmadeStyle" name="cloudmadeStyle" /></td>
+  </tr>
+  <tr>
+    <td><label for="tileUrl">
+	An alternate tile URL for the basemap.
+    </label></td>
+    <td><input type="text" width="120" id="tileUrl" name="tileUrl" /></td>
+  </tr>
+  <tr>
+    <td><label for="tileAttr">
+	Attribution for the above tile URL.
+	Only honored if tile URL is provided:
+    </label></td>
+    <td><input type="text" width="80" id="tileAttr" name="tileAttr" /></td>
+  </tr>
+  <tr>
+    <td><label for="maxZoom">
+	The maximum zoom level for the map:
+    </label></td>
+    <td><input type="text" width="80" id="maxZoom" name="maxZoom" /></td>
+  </tr>
+</table>

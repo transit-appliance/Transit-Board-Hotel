@@ -30,4 +30,18 @@ parsed = '<style>' + css + '</style>\n' +\
     '<script type="text/javascript">' + js + '</script>' +\
     html
 
-print json.dumps({"html": parsed})
+# Get rid of hidden code
+lines = parsed.split('\n')
+deleting = False
+
+outlines = ''
+# Works on a per-line level
+for line in lines:
+    if '[compilehidden]' in line:
+        deleting = True
+    if not deleting:
+        outlines += line + '\n'
+    if '[/compilehidden]' in line:
+        deleting = False
+
+print json.dumps({"html": outlines})
