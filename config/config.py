@@ -67,14 +67,22 @@ output['fields'].append(dict(
         label='Destinations',
         advice='The destination IDs for this appliance',
         html='''
-  <!-- jsbin.com/amojef/40 -->
+  <!-- jsbin.com/amojef/59 -->
   <div id="tbdhselectdests">
     Show destinations within <span class="tbdhmiles" style="color: red"></span> miles:
     <div class="tbdhslider"></div>
-    <ul class="tbdhdestslist"></ul>
-    <div class="tbdhdestsdrop">Drop destinations here!<ul></ul><div>
-      
-      <input type="hidden" name="destinations" class="tbdhdestinationinp" />
+    Drag destinations from the left list to the right list to add them to your configuration!
+    <table width="100%" cols="2" style="cellborder: 0px">
+      <tr>
+        <td width="50%">
+          <ul class="tbdhdestslist"></ul>
+        </td>
+        <td width="50%" class="tbdhdestsdrop">
+          <ul></ul>
+        </td>
+      </tr>
+    </table>
+    <input type="hidden" name="destinations" class="tbdhdestinationinp" />
   </div>
 <script>
 $(document).ready(function () {
@@ -87,14 +95,53 @@ $(document).ready(function () {
   var updateValue = function () {
     var dests = [];
       
-    div.find('div.tbdhdestsdrop ul li span.tbdhdestid').each(function () {
+    div.find('td.tbdhdestsdrop ul li span.tbdhdestid').each(function () {
         dests.push($(this).text());
       });
     
     div.find('input.tbdhdestinationinp').val(dests.join(','));
   };
   
-  div.find('div.tbdhdestsdrop').droppable({
+  // prepopulate the selected list once the hidden input field has been set
+  div.find('input.tbdhdestinationsinp').one('change', function () {
+      var dests = div.find('input.tbdhdestinationinp').val().split(',');
+      if (dests.length > 0) {
+	  // no need to use a library to make the JSON, keep it browser-independent
+	  var keys = '["' + dests.join('","') + '"]';
+
+	  $.ajax({
+	      url: 'http://transitappliance.couchone.com/destinations/_all_docs',
+	      data: {
+		  keys: keys,
+		  include_docs: true
+	      },
+	      dataType: 'jsonp',
+	      success: function (data) {
+		  $.each(data.rows, function (ind, row) {
+		      // fair enough, it's not very DRY
+		      var li = $('<li><span class="tbdhdestid" style="display: none">' + row.doc._id +
+				 '</span><span class="tbdhdestname">' + row.doc.properties.name + 
+				 '</span><a href="#" title="remove destination "' + row.doc.properties.name + 
+				 '">(remove)</a></li>');
+		      
+		      li.find('a').click(function (e) {
+			  e.preventDefault();
+			  $(this).parent('li').remove();
+			  updateValue();
+		      });
+		      
+		      div.find('td.tbdhdestsdrop ul').append(li);
+		      
+		      // just to make sure
+		      updateValue();
+		  });
+	      }
+	  });
+      }
+  });         
+        
+  
+  div.find('td.tbdhdestsdrop').droppable({
     drop: function (e, ui) {
       // check it isn't already dropped.
       var dests = [];
@@ -108,7 +155,7 @@ $(document).ready(function () {
         // creates a copy.
         var li = $('<li>' + ui.draggable.html() + 
                                   '<a href="#" title="remove destination '+ 
-                                  ui.draggable.find('span.tbdhdestname') + '">X</a>' +
+                                  ui.draggable.find('span.tbdhdestname') + '">(remove)</a>' +
                                  '</li>');
     
         // remove the li if the remove button is clicked
@@ -127,7 +174,11 @@ $(document).ready(function () {
     }
   });                                     
   
-  div.find('.tbdhslider').slider({
+  // use sortable so that they snap back if they don't make it to the droppable, and if they
+  // do they don't leave a hole
+  div.find('ul.tbdhdestslist').sortable().disableSelection();
+  
+  var slider = div.find('.tbdhslider').slider({
     min: 1,
     max: 40,
     value: 10 
@@ -155,12 +206,13 @@ $(document).ready(function () {
                                               // it gets converted to a feature twice, once when uploaded and once when downloaded
                                               feat.properties.properties.name + '</span></li>');
         });
-        // use sortable so that they snap back if they don't make it to the droppable, and if they
-        // do they don't leave a hole
-        div.find('ul.tbdhdestslist').sortable().disableSelection();
       }
     });    
   });
+  
+  // init; the hash is to trick it into thinking that we're calling it from within jQuery.
+  slider.trigger('slide', {value: slider.slider('value')});
+  slider.trigger('slidechange', {value: slider.slider('value')});
 });
 </script>
 '''))
