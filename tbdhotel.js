@@ -337,13 +337,29 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     this.transitLayer.clearLayers();
     var firstGeom; // this stores the first geometry, which will be shown
     // as soon as the container fades in
+
+    var colors = {
+	// these spans are actually hidden, but their CSS attrs are used on
+	// the map
+	walk: $('.map-walk-color').css('color'),
+	transit: $('.map-transit-color').css('color')
+    };
+
+    var opacities = {
+	walk: $('.map-walk-color').css('opacity'),
+	transit: $('.map-transit-color').css('opacity')
+    };
+
     $.each(dest.itinerary.legs, function (ind, leg) {
 	if (leg.type == 'walk') {
-	    var geom = new L.Polyline(leg.geometry, {color: 'blue'})
+	    var geom = new L.Polyline(leg.geometry, {color: colors.walk,
+						     opacity: opacities.walk});
 	    instance.walkLayer.addLayer(geom);
 	}
 	else if (leg.type == 'transit') {
-	    var geom = new L.Polyline(leg.geometry, {color: 'red'})
+	    var geom = new L.Polyline(leg.geometry, 
+				      {color: colors.transit,
+				       opacity: opacities.transit});
 	    instance.transitLayer.addLayer(geom);
 	}
 	// 12s per leg
