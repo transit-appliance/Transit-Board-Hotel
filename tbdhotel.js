@@ -415,12 +415,16 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     // out of sight.
     $('.photo').css('height', (viewport.y + 15) + 'px');
 
-    $('.photo a img').each(function (ind, photo) {
-	photo = $(photo);
+    $('.photo a img').each(function (ind, domPhoto) {
+	photo = $(domPhoto);
 
 	// figure out the vertical and horizontal scaling to get a 15% crop on each side
 	// (the max acceptable) and then use the smaller scaling factor
-	var photoSize = {x: photo.width(), y: photo.height()};
+
+	// HTML5 naturalWidth/height not yet available through jQuery, I believe
+	// thanks to http://stackoverflow.com/questions/318630/get-real-image-width-and-height-with-javascript-in-safari-chrome
+	// for the tip to recieve image sizes
+	var photoSize = {x: domPhoto.naturalWidth, y: domPhoto.naturalHeight};
 
 	var vert = (1.3 * viewport.y)/photoSize.y;
 	var horiz = (1.3 * viewport.x)/photoSize.x;
