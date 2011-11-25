@@ -4,10 +4,10 @@
     <mapcanvas>
         <units>meters</units>
         <extent>
-            <xmin>-13656092.520924</xmin>
-            <ymin>5701092.279806</ymin>
-            <xmax>-13653615.572905</xmax>
-            <ymax>5702975.046653</ymax>
+            <xmin>-13659998.282369</xmin>
+            <ymin>5704684.516328</ymin>
+            <xmax>-13657521.334351</xmax>
+            <ymax>5706567.283174</ymax>
         </extent>
         <projections>1</projections>
         <destinationsrs>
@@ -24,7 +24,7 @@
         </destinationsrs>
     </mapcanvas>
     <legend>
-        <legendlayer open="true" checked="Qt::Checked" name="destinations" showFeatureCount="0">
+        <legendlayer open="true" checked="Qt::Checked" name="destinations" showFeatureCount="1">
             <filegroup open="true" hidden="false">
                 <legendlayerfile isInOverview="0" layerid="destinations20111020171138029" visible="1"/>
             </filegroup>
@@ -57,7 +57,7 @@
         </maplayer>
         <maplayer minimumScale="0" maximumScale="1e+08" geometry="Point" type="vector" hasScaleBasedVisibilityFlag="0">
             <id>destinations20111020171138029</id>
-            <datasource>dbname='/home/matthewc/Documents/Dropbox/programming/transit-appliance/transit-board-hotel/gis/destinations/destinations.sqlite' table="destinations" (geometry) sql=image1_url IS NULL OR image1_url = ''</datasource>
+            <datasource>dbname='/home/matthewc/Documents/Dropbox/programming/transit-appliance/transit-board-hotel/gis/destinations/destinations.sqlite' table="destinations" (geometry) sql=</datasource>
             <layername>destinations</layername>
             <srs>
                 <spatialrefsys>
@@ -74,12 +74,36 @@
             <transparencyLevelInt>255</transparencyLevelInt>
             <provider encoding="System">spatialite</provider>
             <vectorjoins/>
-            <renderer-v2 symbollevels="0" type="singleSymbol">
+            <renderer-v2 symbollevels="0" type="RuleRenderer" firstrule="0">
+                <rules>
+                    <rule scalemaxdenom="0" description="" filter="image1_url IS NOT NULL AND image1_url &lt;> ''" symbol="0" scalemindenom="0" label="Images"/>
+                    <rule scalemaxdenom="0" description="" filter="image1_url IS NULL OR image1_url = ''" symbol="1" scalemindenom="0" label="No Images"/>
+                </rules>
                 <symbols>
                     <symbol outputUnit="MM" alpha="1" type="marker" name="0">
                         <layer pass="0" class="SimpleMarker" locked="0">
                             <prop k="angle" v="0"/>
-                            <prop k="color" v="136,231,165,255"/>
+                            <prop k="color" v="173,124,144,255"/>
+                            <prop k="color_border" v="0,0,0,255"/>
+                            <prop k="name" v="circle"/>
+                            <prop k="offset" v="0,0"/>
+                            <prop k="size" v="2"/>
+                        </layer>
+                    </symbol>
+                    <symbol outputUnit="MM" alpha="1" type="marker" name="1">
+                        <layer pass="0" class="SimpleMarker" locked="0">
+                            <prop k="angle" v="0"/>
+                            <prop k="color" v="255,0,0,255"/>
+                            <prop k="color_border" v="0,0,0,255"/>
+                            <prop k="name" v="circle"/>
+                            <prop k="offset" v="0,0"/>
+                            <prop k="size" v="4"/>
+                        </layer>
+                    </symbol>
+                    <symbol outputUnit="MM" alpha="1" type="marker" name="default">
+                        <layer pass="0" class="SimpleMarker" locked="0">
+                            <prop k="angle" v="0"/>
+                            <prop k="color" v="173,124,144,255"/>
                             <prop k="color_border" v="0,0,0,255"/>
                             <prop k="name" v="circle"/>
                             <prop k="offset" v="0,0"/>
@@ -87,8 +111,6 @@
                         </layer>
                     </symbol>
                 </symbols>
-                <rotation field=""/>
-                <sizescale field=""/>
             </renderer-v2>
             <customproperties/>
             <displayfield>name</displayfield>
