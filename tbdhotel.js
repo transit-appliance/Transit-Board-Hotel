@@ -275,7 +275,8 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	    html += '<li class="photo" width="100%" height="100%">' +
 	    '<a href="' + imageAttrUrl + '">' +
 	    '<span class="photo_attribution">' + imageAttr + '</span>' +
-	    '<img src="' + imageUrl + '" />' +
+		// hide it until it loads
+	    '<img src="' + imageUrl + '" style="display: none" />' +
 	    '</li></a>\n';
 	}
     }
@@ -417,28 +418,34 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 
     $('.photo a img').each(function (ind, domPhoto) {
 	photo = $(domPhoto);
+	// set up the viewport when the photo has loaded, so that the sizes
+	// are present.
+	photo.load(function () {
 
-	// figure out the vertical and horizontal scaling to get a 15% crop on each side
-	// (the max acceptable) and then use the smaller scaling factor
-
-	// HTML5 naturalWidth/height not yet available through jQuery, I believe
-	// thanks to http://stackoverflow.com/questions/318630/get-real-image-width-and-height-with-javascript-in-safari-chrome
-	// for the tip to recieve image sizes
-	var photoSize = {x: domPhoto.naturalWidth, y: domPhoto.naturalHeight};
-
-	var vert = (1.3 * viewport.y)/photoSize.y;
-	var horiz = (1.3 * viewport.x)/photoSize.x;
-	var scale = Math.min (vert, horiz);
-	
-	photo.css('width', String(photoSize.x * scale) + 'px');
-	// center
-	photo.css('position', 'relative')
-	    .css('top', -0.5*(photo.height() - viewport.y) + 'px')
-	    .css('left', -0.5*(photo.width() - viewport.x) + 'px');
-
-	// keep the attribution on top of the image
-	photo.parent().find('.photo_attribution')
-	    .css('right', -0.5*(photo.width() - viewport.x) + 'px');
+	    // figure out the vertical and horizontal scaling to get a 15% crop on each side
+	    // (the max acceptable) and then use the smaller scaling factor
+	    
+	    // HTML5 naturalWidth/height not yet available through jQuery, 
+	    // I believe
+	    // thanks to http://stackoverflow.com/questions/318630/get-real-image-width-and-height-with-javascript-in-safari-chrome
+	    // for the tip to recieve image sizes
+	    var photoSize = {x: domPhoto.naturalWidth, y: domPhoto.naturalHeight};
+	    
+	    var vert = (1.3 * viewport.y)/photoSize.y;
+	    var horiz = (1.3 * viewport.x)/photoSize.x;
+	    var scale = Math.min (vert, horiz);
+	    
+	    photo.css('width', String(photoSize.x * scale) + 'px');
+	    // center
+	    photo.css('position', 'relative')
+		.css('top', -0.5*(photo.height() - viewport.y) + 'px')
+		.css('left', -0.5*(photo.width() - viewport.x) + 'px');
+	    
+	    // keep the attribution on top of the image
+	    photo.parent().find('.photo_attribution')
+		.css('right', -0.5*(photo.width() - viewport.x) + 'px');
+	    photo.css('display', 'block');
+	});
     });
 
     // highlight the first leg
