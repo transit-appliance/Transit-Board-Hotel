@@ -585,7 +585,18 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
     $.when.apply(null, rqs).done(function () {
 	console.log('finished retrieving destinations');
 	instance.destinations = localDests;
+
+	// allow more requests to be made
 	df.resolve();
+	
+	// force the images to be cached
+	$.each(localDests, function (ind, dest) {
+	    for (var i = 1; i <= 4; i++) {
+		$('#cache-force-area').append(
+		    '<img src="' + dest.properties['image' + i + '_url'] + '"/>'
+		);
+	    }
+	});
     });
 
     return df;

@@ -75,3 +75,12 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;
 /* set some styles on the map */
 .map-walk-color { color: #6666ff; opacity: 0.75 }
 .map-transit-color { color: #f66; opacity: 0.75 }
+
+#hidden { display: none }
+
+/* don't use display: none to hide, see 
+   http://www.quirksmode.org/css/displayimg.html 
+   I don't think we'll see a hundred-thousand-pixel wide 
+   image in the near future.
+*/
+#cache-force-area { position: fixed; left: -100000; }
