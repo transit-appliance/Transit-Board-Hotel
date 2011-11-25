@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS3 Transition Test</title>
+    <script type="text/javascript" src="../jquery.min.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function () {
+        // every 3 s, move it right
+        setInterval(function () {
+	    $('#test').css('top', '60px');
+	}, 3000);
+	// every 3s after first 1.5s, move it back
+	setTimeout(function () {
+	    setInterval (function () {
+		$('#test').css('top', '0px');
+	    }, 3000)
+	}, 1500);
+    });
+    </script>
+    <style>
+      /* thanks to http://css3.bradshawenterprises.com/transitions/ */
+      #test {
+	-webkit-transition: all 1s ease-in-out;
+	-moz-transition: all 1s ease-in-out;
+	-o-transition: all 1s ease-in-out;
+	-ms-transition: all 1s ease-in-out;
+	transition: all 1s ease-in-out;
+      position: relative;
+      top: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CSS3 transition test</h1>
+    <div id="test">
+      If I move smoothly rather than<br/>
+      jumping, your browser supports CSS3<br/>
+      transitions!
+    </div>
+</body>
+</html>
