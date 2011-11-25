@@ -592,9 +592,11 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
 	// force the images to be cached
 	$.each(localDests, function (ind, dest) {
 	    for (var i = 1; i <= 4; i++) {
-		$('#cache-force-area').append(
-		    '<img src="' + dest.properties['image' + i + '_url'] + '"/>'
-		);
+		if (dest.properties['image' + i + '_url'] != null) {
+		    $('#cache-force-area').append(
+			'<img src="' + dest.properties['image' + i + '_url'] + '"/>'
+		    );
+		}
 	    }
 	});
     });
