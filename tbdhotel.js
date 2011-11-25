@@ -647,13 +647,15 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		// make sure it fits hard requirements (0 transfers,
 		// allowed stop), frequent service
 		// TODO: allowed stop
-		if (itin.find('numberOfTransfers').text() != '0')
-		    return;
+		if (itin.find('numberOfTransfers').text() != '0') {
+		    console.log('Trip has transfers!');
+		    return true;
+		}
 
 		// We don't handle throughroutes yet (issue 43)
 		if (Number(itin.find('numberOfTripLegs').text()) > 3) {
 		    console.log('Too many trip legs, probably issue 43!');
-		    return;
+		    return true;
 		}
 
 		// route 90 is an alternate number for MAX
@@ -673,7 +675,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 				itin.find('leg route internalNumber')
 				.first().text() +
 				' is not Frequent Service');
-		    return;
+		    return true;
 		}
 		
 		// TODO: weights?
