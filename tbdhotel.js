@@ -157,9 +157,9 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     // Leaflet will not init right if we put it in an invisible element
     $('#container').css('opacity', '0').css('display', 'block');
     // add this back
-    //{zoomControl: false})
     this.map = new L.Map('map', {
-	attributionControl: false // attr is handled separately.
+	attributionControl: false, // attr is handled separately.
+	zoomControl: false // zoom is automatic
     })
 	.addLayer(baseLayer)
 	.addLayer(transitOverlayLayer)
