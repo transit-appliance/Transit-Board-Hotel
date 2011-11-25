@@ -35,7 +35,8 @@ com.transitboard.hotel = function (realTimeArrivals) {
     }
 
     // set up custom CSS
-    if (this.realTimeArrivals.optionsConfig.stylesheet != undefined) {
+    if (this.util.replaceNone(
+	this.realTimeArrivals.optionsConfig.stylesheet) != undefined) {
 	for (var i = 0; i < this.realTimeArrivals.optionsConfig.stylesheet.length;
 	     i++)
 	    $('head').append('<link rel="stylesheet" type="text/css" href="'+
@@ -89,6 +90,19 @@ com.transitboard.hotel = function (realTimeArrivals) {
 // util functions in this namespace
 com.transitboard.hotel.prototype.util = {};
 
+/**
+ * return undefined for '' or [''], otherwise input. Used to parse options.
+ * b/c the config tool gives us options like cloudmadeStyle=''
+ * @param {object} input The input
+ * @returns {object}
+*/
+com.transitboard.hotel.prototype.util.replaceNone = function (input) {
+    if (input == '' |
+	input == [''])
+	return undefined;
+    else return input;
+};
+
 // This jump-starts the display
 com.transitboard.hotel.prototype.doDisplay = function () {
     var instance = this;
@@ -98,7 +112,8 @@ com.transitboard.hotel.prototype.doDisplay = function () {
 
     // Init the map
     // allow them to set either a CloudMade style or a custom tile server
-    if (this.realTimeArrivals.optionsConfig.cloudmadeStyle != undefined) {
+    if (this.util.replaceNone(
+	this.realTimeArrivals.optionsConfig.cloudmadeStyle) != undefined) {
 	// config section
 	// it'd be better if the key was left as is, so that we can track traffic
 	// style #46244 is the one Matt built for this project
@@ -108,9 +123,11 @@ com.transitboard.hotel.prototype.doDisplay = function () {
 	
 	var tileAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
     }
-    else if (this.realTimeArrivals.optionsConfig.tileUrl != undefined) {
+    else if (this.util.replaceNone(
+	this.realTimeArrivals.optionsConfig.tileUrl) != undefined) {
 	var tileUrl = this.realTimeArrivals.optionsConfig.tileUrl[0]
-	if (this.realTimeArrivals.optionsConfig.tileAttr != undefined)
+	if (com.transitboard.hotel.replaceNone(
+	    this.realTimeArrivals.optionsConfig.tileAttr) != undefined)
 	    var tileAttr = this.realTimeArrivals.optionsConfig.tileAttr[0]
 	else var tileAttr = '';
     }
@@ -314,7 +331,9 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 			    '<span class="trip-fare">$' + fare.toFixed(2) + ' USD each way</span></span>');
 
     var imageTimeout = 
-	1000 * Number(this.realTimeArrivals.optionsConfig.imageTimeout || 3);
+	1000 * Number(
+	    this.util.replaceNone(
+		this.realTimeArrivals.optionsConfig.imageTimeout) || 3);
    // set slideUps for each image in turn
     var i = 1;
     $('.photo').each(function () {
@@ -454,7 +473,8 @@ com.transitboard.hotel.prototype.zoomToBounds = function (bounds, panZoom) {
     this.map.invalidateSize();
     // it will implicitly convert the list to a number; if you specify
     // maxZoom 2+ times, behavior is undefined
-    var maxZoom = Number(this.realTimeArrivals.optionsConfig.maxZoom || 16);
+    var maxZoom = Number(this.util.replaceNone(
+	this.realTimeArrivals.optionsConfig.maxZoom) || 16);
     // don't overzoom
     var z = Math.min(this.map.getBoundsZoom(bounds), maxZoom);
     this.map.setView(bounds.getCenter(), z, !panZoom);
