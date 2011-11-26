@@ -1092,6 +1092,7 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
     // TODO: order for efficiency?
     try {
 	return this.realTimeArrivals.arrivalsQueue
+	    .minutes(60) // show only imminent arrivals
 	    .byStop()[stopId]
 	    .byLine()[Number(route)] // TODO: make sure this always works
 	    .byDest()[headsign]; // this really means byHeadsign
