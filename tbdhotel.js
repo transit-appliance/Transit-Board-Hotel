@@ -299,29 +299,18 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	else if (leg.type == 'transit') {
 	    if (ind == 0) var lett = 'B';
 	    else var lett = 'b';
-
-	    var theArrivals = instance.getRealTimeArrivals(
-		'TriMet:' + leg.startId,
-		leg.routeId,
-		leg.headsign
-	    );
-
-	    if (theArrivals.length == 0) {
-		console.log('No arrivals for transit leg ' +
-			    leg.headsign + ', skipping destination ' +
-			    dest.title);
-		// update trip plans, this probably means they're stale
-		// it will not run if it has been called in the last two
-		// minutes
-		instance.updateTripPlans();
-	    }
-
 	    narr += '<span id="narrative-leg-' + ind + 
 		'" class="narrative-leg">' + 
 		lett + 'oard ' + leg.headsign +
 		' <span class="rtarrivals">(next: ' + 
 		// agency is hard-wired for now
-		instance.formatArrivals(theArrivals) +
+		instance.formatArrivals(
+		    instance.getRealTimeArrivals(
+			'TriMet:' + leg.startId,
+			leg.routeId,
+			leg.headsign
+		    )
+		) +
 		')</span>,' +
 		' offboard at ' + leg.toPlace + 
 		' (' + leg.noStops + ' stops)' +
@@ -570,17 +559,6 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
 
     // the first time, the caller needs to know when this is done
     var df = $.Deferred();
-    var time = localTime().getTime();
-    if (instance.lastUpdate != undefined & 
-	// 2 minutes
-	time - instance.lastUpdate < 120000) {
-	console.log(
-	    'Trip plans are already fresh, soundly refusing to update them!'
-	);
-	df.resolve();
-	return df;
-    }
-    else instance.lastUpdate = time;
 
     // keep a local copy
     var localDests = this.destinations;
