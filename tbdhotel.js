@@ -697,7 +697,8 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		    console.log('Trip has transfers!');
 		    return true;
 		}
-
+	    
+					
 		// We don't handle throughroutes yet (issue 43)
 		if (Number(itin.find('numberOfTripLegs').text()) > 3) {
 		    console.log('Too many trip legs, probably issue 43!');
@@ -721,6 +722,26 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 				itin.find('leg route internalNumber')
 				.first().text() +
 				' is not Frequent Service');
+		    return true;
+		}
+
+		// these two tests are both transfer safe, b/c we only care about restrictions on the first legs
+		// stop id of this itin
+		var sid = itin.find('leg from stopId').first().text();
+		if (instance.realTimeArrivals.stopsConfig.TriMet[sid] == undefined) {
+		    console.log(dest.properties.name + ': stop ' + sid + 
+				' is not in the stops config for this appliance!');
+		    return true;
+		}
+
+		// check for allowed route
+		// it should either be explicitly stated or included with *. We assume that all routes
+		// TP suggests are also in the real time feed.
+		var rid = itin.find('leg route internalNumber').first().text();
+		if (instance.realTimeArrivals.stopsConfig.TriMet[sid][rid] == undefined &
+		    instance.realTimeArrivals.stopsConfig.TriMet[sid]['*'] == undefined) {
+		    console.log(dest.properties.name + ': stop ' + sid + ' is allowed, but route ' + 
+				rid + ' is specifically excluded from the configuration.');
 		    return true;
 		}
 		
@@ -1093,7 +1114,7 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
 								  headsign) {
     // TODO: order for efficiency?
     try {
-	return this.realTimeArrivals.arrivalsQueue
+	var aq = this.realTimeArrivals.arrivalsQueue
 	    .minutes(60) // show only imminent arrivals
 	    .byStop()[stopId]
 	    .byLine()[Number(route)] // TODO: make sure this always works
@@ -1102,6 +1123,13 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
     catch (err) {
 	// return an empty arrivalsQueue
 	console.log('no arrivals found');
+	return new arrivalsQueue();
+    }
+    if (typeof aq != 'undefined') {
+	return aq
+    }
+    else {
+	console.log('no arrivals found for headsign ' + headsign);
 	return new arrivalsQueue();
     }
 }
