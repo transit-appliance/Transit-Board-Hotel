@@ -803,7 +803,9 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		    }
 		    else {
 			legOut.type = 'transit'
-			legOut.headsign = leg.find('route name').text();
+			// some (bus) routes have leading spaces that the real time arrivals service does
+			// not have.
+			legOut.headsign = $.trim(leg.find('route name').text());
 			legOut.time = Number(leg.find('time-distance duration').text());
 			legOut.startId = leg.find('from stopId').text();
 			legOut.endId = leg.find('to stopId').text();
@@ -1117,7 +1119,7 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
 	var aq = this.realTimeArrivals.arrivalsQueue
 	    .minutes(60) // show only imminent arrivals
 	    .byStop()[stopId]
-	    .byLine()[Number(route)] // TODO: make sure this always works
+	    .byLine()[Number(route)] // FIXED: make sure this always works; Chris says it does for TriMet
 	    .byDest()[headsign]; // this really means byHeadsign
     }
     catch (err) {
@@ -1125,6 +1127,7 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
 	console.log('no arrivals found');
 	return new arrivalsQueue();
     }
+    // in case the headsign does not match
     if (typeof aq != 'undefined') {
 	return aq
     }
