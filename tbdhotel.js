@@ -194,8 +194,8 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     this.updateClock();
     setInterval(this.updateClock, 15*1000);
 
-    // TODO: 10 mins correct amount of time?
-    setInterval(this.updateTripPlans, 10*60*1000);
+    // TODO: 8 mins correct amount of time?
+    setInterval(this.updateTripPlans, 8*60*1000);
     // seed the data before we display it
     this.updateTripPlans().done(function () {
 	// main loop
@@ -680,6 +680,8 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		console.log('error on destination ' +
 			    dest.properties.name + ': ' +
 			    data.find('error').text());
+		// skip it
+		deferred.resolve(null);
 		return;
 	    }
 
