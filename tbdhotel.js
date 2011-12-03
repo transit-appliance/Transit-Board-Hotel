@@ -83,8 +83,8 @@ com.transitboard.hotel = function (realTimeArrivals) {
 	console.log('failed');
     });
 
-    // add the mapquest attribution
-    this.addAttribution('Walking directions courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">');
+    // add the CloudMade attribution
+    this.addAttribution('Walking directions courtesy of <a href="http://www.cloudmade.com/" target="_blank">CloudMade</a>');
 }
 
 // util functions in this namespace
@@ -885,52 +885,6 @@ com.transitboard.hotel.prototype.util.reverseCoord = function (coord) {
 }
 
 /**
- * Decode a MapQuest compressed line into an array of Leaflet LatLngs
- * Copied almost verbatim from http://soulsolutions.com.au/Default.aspx?tabid=96
- * @param {string} encoded The encoded string
- * @returns {L.LatLng[]} the decoded sting
-*/
-com.transitboard.hotel.prototype.util.decodeCompressedLine = function (encoded) {
-    var len = encoded.length;
-    var index = 0;
-    var array = [];
-    var lat = 0;
-    var lng = 0;
-    try
-    {
-        while (index < len) {
-            var b;
-            var shift = 0;
-            var result = 0;
-            do {
-                b = encoded.charCodeAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-            var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-            lat += dlat;
-
-            shift = 0;
-            result = 0;
-            do {
-                b = encoded.charCodeAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-            var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-            lng += dlng;
-
-	    // modified to use Leaflet
-            array.push(new L.LatLng((lat * 1e-5), (lng * 1e-5)));
-        }
-    } catch(ex)
-    {
-        //error in encoding.
-    }
-    return array;
-}
-
-/**
  * Get the distance from one lat/lon to another, in meters
  * Currently assumes WGS84 LatLngs in the State Plane Oregon North area
  * If conditions are met, results will have error <= 1 part in 10,000
@@ -973,36 +927,37 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 	}
     }
 
+    // build a cloudmade routing URL
+    var getCloudmadeURL = function (opts) {
+	return 'http://routes.cloudmade.com/2d634343963a4426b126ab70b62bba2a/api/0.3/' +
+	    opts.start_point + ',' + opts.end_point + '/foot.js' +
+	    '?units=km';};
+
     $.ajax({
-	url: 'http://open.mapquestapi.com/directions/v0/route',
-	data: {
-	    outFormat: 'json',
-	    from: this.util.reverseCoord(fromCoord),
-	    to: this.util.reverseCoord(toCoord),
-	    routeType: 'pedestrian',
-	    shapeFormat: 'cmp',
-	    units: 'k', // km - metric (SI) system
-	    generalize: 0 // no simplification, we may be quite zoomed in
-	},
+	url: getCloudmadeURL({
+	    start_point: this.util.reverseCoord(fromCoord),
+	    end_point: this.util.reverseCoord(toCoord)}),
 	dataType: 'jsonp',
 	success: function (data) {
 	    console.log('received walk geometry');
 
 	    // check if there was an error
-	    if (data.info.statuscode != 0) {
-		console.log('Error ' + data.info.statuscode +
+	    if (data.status != 0) {
+		console.log('Error ' + data.status +
 			    ' retrieving walk directions from ' +
 			    fromCoord + ' to ' + toCoord + ': ' +
-			    data.info.messages.join('; '));
+			    data.status_message);
 
 		var from = instance.util.reverseCoord(fromCoord).split(',');
 		var to = instance.util.reverseCoord(toCoord).split(',');
 		var geom = [new L.LatLng(Number(from[0]), Number(from[1])),
 			    new L.LatLng(Number(to[0]), Number(to[1]))];
 
-		// in an Old World street grid, the maximum distance between two points is 
-		// 2^(1/2) * air distance
-		var dist = 1.41421 * instance.util.distanceBetween(geom[0], geom[1]);
+		// in an Old World street grid, the maximum distance 
+		// between two points is 2^(1/2) * air distance
+		// much of Portland is an old world street grid
+		var dist = 1.41421 * 
+		    instance.util.distanceBetween(geom[0], geom[1]);
 
 		// 53 m/min ~= 2 mph
 		df.resolve({geometry: geom, length: dist, time: dist / 53});
@@ -1010,14 +965,17 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 	    }
 
 	    // decode the compressed geometry
-	    var geom = instance.util.decodeCompressedLine(
-		data.route.shape.shapePoints
-	    );
+	    var geom = [];
+	    $.each(data.route_geometry, function (ind, pt) {
+		geom.push(new L.LatLng(pt[0], pt[1]));
+	    });
 
 	    // add the start and end geometries
 	    // the reason we do this is that MapQuest API snaps to the nearest
 	    // node, which can lead to some odd-looking paths in sparse OSM 
-	    // areas. This will at least give the general idea
+	    // areas. This will at least give the general idea.
+	    // I suspect the CloudMade API does the same thing, in any case
+	    // it won't hurt.
 	    var from = instance.util.reverseCoord(fromCoord).split(',');
 	    var to = instance.util.reverseCoord(toCoord).split(',');
 	    geom.unshift(new L.LatLng(Number(from[0]), Number(from[1])));
@@ -1026,10 +984,10 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
 	    // km to m; if the route is quite short (<500m) we may get 0m;
 	    // also the number may be in error by as much as 500m. Something
 	    // to be aware of.
-	    var length = data.route.distance * 1000; 
+	    var length = data.route_summary.total_distance * 1000; 
 
 	    // save it in the cache
-	    var route = {geometry: geom, length: length, time: data.route.time/60};
+	    var route = {geometry: geom, length: length, time: data.route_summary.total_time/60};
 	    if (instance.walkGeomCache[fromCoord] == undefined)
 		instance.walkGeomCache[fromCoord] = [];
 	    instance.walkGeomCache[fromCoord][toCoord] = route;
