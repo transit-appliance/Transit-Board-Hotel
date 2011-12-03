@@ -69,12 +69,14 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;
     margin-left: 0; margin-right: 0; border-left: 0; border-right: 0;
     padding-left: 0; padding-right:0; position: relative }
 
+.slideshow ul { border: 0; margin: 0; padding: 0 }
+
 .trip-time { margin-left: 0; margin-right: auto }
 .trip-fare { position: absolute; right: 0 }
 
 /* set some styles on the map */
 .map-walk-color { color: #6666ff; opacity: 0.75 }
-.map-transit-color { color: #f66; opacity: 0.75 }
+.map-transit-color { color: #fff000; opacity: 0.8 }
 
 #hidden { display: none }
 
