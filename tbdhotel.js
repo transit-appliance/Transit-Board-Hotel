@@ -277,11 +277,11 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	    '<span class="photo_attribution">' + imageAttr + '</span>' +
 		// hide it until it loads
 	    '<img src="' + imageUrl + '" style="display: none" />' +
-	    '</li></a>\n';
+	    '</a></li>\n';
 	}
     }
 
-    $('#slideshow ul').prepend(html);
+    $('#map-wrapper').before(html);
 
     // set up the narrative
     var time = 0;
@@ -421,7 +421,11 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	// set up the viewport when the photo has loaded, so that the sizes
 	// are present.
 	photo.load(function () {
-
+	    // the domPhoto and photo references change as the outer scope 
+	    // changes, so we need our own copies or Bad Things Happen
+	    //(i.e. the the first n - 1 photos don't display)
+	    var photo = $(this);
+	    
 	    // figure out the vertical and horizontal scaling to get a 15% crop on each side
 	    // (the max acceptable) and then use the smaller scaling factor
 	    
@@ -429,7 +433,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	    // I believe
 	    // thanks to http://stackoverflow.com/questions/318630/get-real-image-width-and-height-with-javascript-in-safari-chrome
 	    // for the tip to recieve image sizes
-	    var photoSize = {x: domPhoto.naturalWidth, y: domPhoto.naturalHeight};
+	    var photoSize = {x: this.naturalWidth, y: this.naturalHeight};
 	    
 	    var vert = (1.3 * viewport.y)/photoSize.y;
 	    var horiz = (1.3 * viewport.x)/photoSize.x;
