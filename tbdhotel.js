@@ -194,8 +194,9 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     this.updateClock();
     setInterval(this.updateClock, 15*1000);
 
-    // TODO: 8 mins correct amount of time?
-    setInterval(this.updateTripPlans, 8*60*1000);
+    // TODO: 15 mins correct amount of time?
+    this.tripPlanUpdateInterval = 15;
+    setInterval(this.updateTripPlans, this.tripPlanUpdateInterval * 60 * 1000);
     // seed the data before we display it
     this.updateTripPlans().done(function () {
 	// main loop
@@ -646,6 +647,9 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
     // format the time to TriMet's liking
     // we have to put in a time or we get no results, as documented
     var now = timeInZone('America/Los_Angeles');
+    // we want to request times slightly in the future, so we don't get stale
+    // trip plans, as mentioned in issue 47
+    now.setMinutes(now.getMinutes() + this.tripPlanUpdateInterval);
     var hour = now.getHours() % 12;
     var mins = now.getMinutes();
     
