@@ -32,10 +32,22 @@ output['fields'].append(dict(
 // this won't be executed until the element has been built because the
 // script won't be added to the page
 $(document).ready( function () {
-    var pos = new google.maps.LatLng(
-		trApp.current_appliance.private.lat,
-		trApp.current_appliance.private.lng
-    );
+    var latlon = {
+	lat: trApp.current_appliance.private.lat,
+	lon: trApp.current_appliance.private.lng
+    };
+
+    // check for a pre-set value
+    $.each(trApp.current_appliance.public.application.options,
+	   function (ind, opt) {
+	       if (opt.name == 'origin') {
+		   var lll = opt.value.split(',');
+		   latlon = {lat: lll[0], lon: lll[1]};
+		   return false;
+	       }
+	   });
+
+    var pos = new google.maps.LatLng(latlon.lat, latlon.lon);
     $('#origin').val(pos.lat() + ',' + pos.lng());
 
     var map = new google.maps.Map(
@@ -102,12 +114,17 @@ $(document).ready(function () {
     div.find('input.tbdhdestinationinp').val(dests.join(','));
   };
   
-  // prepopulate the selected list once the hidden input field has been set
-  div.find('input.tbdhdestinationsinp').one('change', function () {
-      var dests = div.find('input.tbdhdestinationinp').val().split(',');
+  // prepopulate the selected list
+    var dests = [];
+    $.each(trApp.current_appliance.public.application.options, function (ind, opt) {
+	if (opt.name == 'destinations') {
+	    dests = opt.value.split(',');
+	    return false;
+	}
+    });
+
       if (dests.length > 0) {
-	  // no need to use a library to make the JSON, keep it browser-independent
-	  var keys = '["' + dests.join('","') + '"]';
+	  var keys = JSON.stringify(dests);
 
 	  $.ajax({
 	      url: 'http://transitappliance.couchone.com/destinations/_all_docs',
@@ -137,8 +154,7 @@ $(document).ready(function () {
 		  });
 	      }
 	  });
-      }
-  });         
+      } 
         
   
   div.find('td.tbdhdestsdrop').droppable({
