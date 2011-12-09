@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scale Testing</title>
+    <style type="text/css">
+      .bigscale {
+      transform: scale(5);
+      -moz-transform: scale(5);
+      -webkit-transform: scale(5);
+      -o-transform: scale(5);
+      -ms-tranform: scale(5);
+      transform-origin: left top;
+      -moz-transform-origin: left top;
+      -ms-transform-origin: left top;
+      -webkit-transform-origin: left top;
+      -o-transform-origin: left top;
+      }
+      </style>
+  </head>
+  <body>
+    <div>
+      This text should be smaller than
+    </div>
+    <div class="bigscale">
+      this text.
+    </div>
+  </body>
+</html>
