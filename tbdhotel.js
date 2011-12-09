@@ -1256,6 +1256,48 @@ com.transitboard.hotel.prototype.updateClock = function () {
     $('#bar-datetime').textfill({maxFontPixels: $('#bar').height() - 5});
 }
 
+
+/**
+ * doNoData: Show the slideshow that is to be shown when no arrivals are 
+ * available
+ * @returns undefined
+*/
+com.transitboard.hotel.prototype.doNoData = function () {
+    var instance = this;
+    // hide this stuff
+    $('#attribution, #container').fadeOut();
+    // load the slideshow text
+    $.ajax({
+	url: (this.util.replaceNone(this.realTimeArrivals.optionsConfig.slideshow) ||
+	      'slideshows/welcome.md'),
+	dataType: 'text', // it's really Markdown
+	success: function (md) {
+	    // we need to parse the Markdown first, in case it uses ref'd images
+	    var converter = Markdown.getSanitizingConverter();
+	    var slides = [];
+	    var i = 0;
+	    slides[0] = $('<div class="slide"></div>');
+	    // loop through the elements, split at <hr>
+	    $(converter.makeHtml(md)).each(function (ind, el) {
+		if ($(el).is('hr')) {
+		    i++;
+		    slides[i] = $('<div class="slide"></div>');
+		}
+		else {
+		    slides[i].append(el);
+		}
+	    });
+	    
+	    // now insert the slides
+	    $('#nodestsshow').html('');
+	    $.each(slides, function (ind, slide) {
+		// already sanitized
+		$('#nodestsshow').append(slide);
+	    });
+	}
+    });	    
+};
+    
 $(document).ready(function () {
     // let it be global during dev, so it's easier to debug
     //var tbdh;
