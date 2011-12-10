@@ -23,6 +23,8 @@ if (typeof console == 'undefined') console = {
 com.transitboard.hotel = function (realTimeArrivals) {
     var instance = this;
     this.realTimeArrivals = realTimeArrivals;
+    this.intervals = {};
+    this.active = true; // when this is set to false, the display stops cycling
 
     // we get top billing
     this.addAttribution('Transit Board&#153; Hotel, a ' +
@@ -205,21 +207,26 @@ com.transitboard.hotel.prototype.doDisplay = function () {
 }
 
 com.transitboard.hotel.prototype.showDestination = function (iteration) {
+    if (!this.active) return;
     var instance = this;
     var dest = this.destinations[iteration];
     
     // this is called if the destination is unreasonable or when it is done
     var showNext = function () {
-	$('#container').fadeOut(500);
+	// when there are no destinations available, this will be set to false, and the no data slideshow
+	// displayed instead.
+	if (instance.active) {
+	    $('#container').fadeOut(500);
 	
-	// wait 550 ms, then show the next slide
-	setTimeout(function () {
-	    iteration++;
-	    if (iteration < instance.destinations.length) 
-		instance.showDestination(iteration);
-	    else 
-		instance.showAttribution();
-	}, 550)
+	    // wait 550 ms, then show the next slide
+	    setTimeout(function () {
+		iteration++;
+		if (iteration < instance.destinations.length) 
+		    instance.showDestination(iteration);
+		else 
+		    instance.showAttribution();
+	    }, 550);
+	}
     }
     
     // no route
@@ -497,6 +504,7 @@ com.transitboard.hotel.prototype.zoomToBounds = function (bounds, panZoom) {
 }
 
 com.transitboard.hotel.prototype.showAttribution = function () {
+    if (!this.active) return;
     var instance = this;
     $('#attribution').fadeIn(500);
     $('#attribution').textfill();
@@ -505,9 +513,11 @@ com.transitboard.hotel.prototype.showAttribution = function () {
 	$('#attribution').fadeOut(500);
     }, 4500); // show for four seconds, plus fade
 
-    setTimeout(function () {
-	instance.showDestination(0);
-    }, 5050); // then show the first destination 50 ms after the fade finishes.
+    if (this.active) {
+	setTimeout(function () {
+	    instance.showDestination(0);
+	}, 5050); // then show the first destination 50 ms after the fade finishes.
+    }
 }
 
 // Add an attribution string
@@ -1265,6 +1275,7 @@ com.transitboard.hotel.prototype.updateClock = function () {
 com.transitboard.hotel.prototype.doNoData = function () {
     var instance = this;
     // hide this stuff
+    this.active = false;
     $('#attribution, #container').fadeOut();
     // load the slideshow text
     $.ajax({
@@ -1294,6 +1305,21 @@ com.transitboard.hotel.prototype.doNoData = function () {
 		// already sanitized
 		$('#nodestsshow').append(slide);
 	    });
+
+	    var slide = 0;
+	    var slides = $('#nodestsshow .slide');
+	    var total = slides.length;
+	    // run through the slides every 3 secs
+	    instance.intervals.noDataSlideshow = setInterval(function () {
+		slide += 1;
+
+		// loop forever
+		if (slide >= total)
+		    slide = 0;
+
+		slides.fadeOut();
+		slides.eq(slide).fadeIn();
+	    }, 3000);
 	}
     });	    
 };
