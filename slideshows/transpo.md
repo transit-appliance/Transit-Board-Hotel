@@ -43,7 +43,7 @@ easy they don’t have to think about it.
 
 # Hardware Form Factors
 
-* Countertop Displays (8” Chumby Platforms)
+* Countertop Displays (8" Chumby Platforms)
  * ~ $150
 * Big-screen (HDTV) display with low-cost
 processor 
