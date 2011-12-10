@@ -1306,8 +1306,25 @@ com.transitboard.hotel.prototype.doNoData = function () {
 		$('#nodestsshow').append(slide);
 	    });
 
-	    var slide = 0;
 	    var slides = $('#nodestsshow .slide');
+	    
+	    // scale all the slides
+	    var viewport = {x: $(window).width(), y: $(window).height() - $('#bar').height()};
+	    // vendor prefixes for CSS transforms
+	    var vendorPrefixes = ['', '-moz-', '-ms-', '-webkit-', '-o-'];
+	    slides.each(function (ind, slide) {
+		slide = $(slide);
+		// get the width and height
+		var xy = {x: slide.width(), y: slide.height()};
+		// get the largest scale to make it fit both horizontally and vertically
+		var scale = Math.min(viewport.x/xy.x, viewport.y/xy.y)*0.9;
+		// set the transforms
+		$.each(vendorPrefixes, function (ind, pfx) {
+		    slide.css(pfx + 'transform', 'scale(' + scale + ')');
+		});
+	    });
+
+	    var slide = 0;
 	    var total = slides.length;
 	    // run through the slides every 3 secs
 	    instance.intervals.noDataSlideshow = setInterval(function () {
