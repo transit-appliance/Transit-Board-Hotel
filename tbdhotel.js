@@ -202,7 +202,10 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     // seed the data before we display it
     this.updateTripPlans().done(function () {
 	// main loop
-	instance.showDestination(0);
+	// won't run if active is false
+	if (instance.active) {
+	    instance.showDestination(0);
+	}
     });
 }
 
@@ -601,9 +604,32 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
 	console.log('finished retrieving destinations');
 	instance.destinations = localDests;
 
-	// allow more requests to be made
-	df.resolve();
+	// check if any available
+	var found = false;
+	$.each(instance.destinations, function (ind, dest) {
+	    if (dest.itinerary != null) {
+		found = true;
+		return false; // no need to keep searching
+	    }
+	});
 	
+	// if none available, show the slideshow
+	if (!found) {
+ 	    instance.active = false;
+	    instance.doNoData();
+	}
+	else {
+	    // stop the slideshow
+	    instance.stopNoData();
+	    instance.active = true;
+	    instance.showDestination(0);
+	}
+
+	// allow more requests to be made
+	// resolve false if no success
+	df.resolve(found);
+	
+	// TODO: this is in the wrong function . . .
 	// force the images to be cached
 	$.each(localDests, function (ind, dest) {
 	    for (var i = 1; i <= 4; i++) {
@@ -1334,11 +1360,19 @@ com.transitboard.hotel.prototype.doNoData = function () {
 		if (slide >= total)
 		    slide = 0;
 
-		slides.fadeOut();
-		slides.eq(slide).fadeIn();
-	    }, 3000);
+		slides.css('display', 'none');
+		slides.eq(slide).css('display', 'block');
+	    }, (instance.util.replaceNone(instance.realTimeArrivals.optionsConfig.slideshowTimeout) || 5) * 1000);
 	}
     });	    
+};
+
+/**
+ * stopNoData: stop the slideshow
+*/
+com.transitboard.hotel.prototype.stopNoData = function () {
+    clearInterval(this.intervals.noDataSlideshow);
+    $('.slide').css('display', 'none');
 };
     
 $(document).ready(function () {
