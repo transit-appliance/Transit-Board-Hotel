@@ -86,3 +86,13 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;
    image in the near future.
 */
 #cache-force-area { position: fixed; left: -100000; }
+
+/* slideshow stuff */
+#nodestsshow .slide { position: fixed; top: 0; 
+		      transform-origin: left top; 
+		      -moz-transform-origin: left top; 
+		      -webkit-transform-origin: left top; 
+		      -o-transform-origin: left top; 
+		      -ms-transform-origin: left top; 
+		      display: none
+		    }

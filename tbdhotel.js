@@ -23,6 +23,8 @@ if (typeof console == 'undefined') console = {
 com.transitboard.hotel = function (realTimeArrivals) {
     var instance = this;
     this.realTimeArrivals = realTimeArrivals;
+    this.intervals = {};
+    this.active = true; // when this is set to false, the display stops cycling
 
     // we get top billing
     this.addAttribution('Transit Board&#153; Hotel, a ' +
@@ -200,26 +202,34 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     // seed the data before we display it
     this.updateTripPlans().done(function () {
 	// main loop
-	instance.showDestination(0);
+	// won't run if active is false
+	if (instance.active) {
+	    instance.showDestination(0);
+	}
     });
 }
 
 com.transitboard.hotel.prototype.showDestination = function (iteration) {
+    if (!this.active) return;
     var instance = this;
     var dest = this.destinations[iteration];
     
     // this is called if the destination is unreasonable or when it is done
     var showNext = function () {
-	$('#container').fadeOut(500);
+	// when there are no destinations available, this will be set to false, and the no data slideshow
+	// displayed instead.
+	if (instance.active) {
+	    $('#container').fadeOut(500);
 	
-	// wait 550 ms, then show the next slide
-	setTimeout(function () {
-	    iteration++;
-	    if (iteration < instance.destinations.length) 
-		instance.showDestination(iteration);
-	    else 
-		instance.showAttribution();
-	}, 550)
+	    // wait 550 ms, then show the next slide
+	    setTimeout(function () {
+		iteration++;
+		if (iteration < instance.destinations.length) 
+		    instance.showDestination(iteration);
+		else 
+		    instance.showAttribution();
+	    }, 550);
+	}
     }
     
     // no route
@@ -497,6 +507,7 @@ com.transitboard.hotel.prototype.zoomToBounds = function (bounds, panZoom) {
 }
 
 com.transitboard.hotel.prototype.showAttribution = function () {
+    if (!this.active) return;
     var instance = this;
     $('#attribution').fadeIn(500);
     $('#attribution').textfill();
@@ -505,9 +516,11 @@ com.transitboard.hotel.prototype.showAttribution = function () {
 	$('#attribution').fadeOut(500);
     }, 4500); // show for four seconds, plus fade
 
-    setTimeout(function () {
-	instance.showDestination(0);
-    }, 5050); // then show the first destination 50 ms after the fade finishes.
+    if (this.active) {
+	setTimeout(function () {
+	    instance.showDestination(0);
+	}, 5050); // then show the first destination 50 ms after the fade finishes.
+    }
 }
 
 // Add an attribution string
@@ -591,9 +604,32 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
 	console.log('finished retrieving destinations');
 	instance.destinations = localDests;
 
-	// allow more requests to be made
-	df.resolve();
+	// check if any available
+	var found = false;
+	$.each(instance.destinations, function (ind, dest) {
+	    if (dest.itinerary != null) {
+		found = true;
+		return false; // no need to keep searching
+	    }
+	});
 	
+	// if none available, show the slideshow
+	if (!found) {
+ 	    instance.active = false;
+	    instance.doNoData();
+	}
+	else {
+	    // stop the slideshow
+	    instance.stopNoData();
+	    instance.active = true;
+	    instance.showDestination(0);
+	}
+
+	// allow more requests to be made
+	// resolve false if no success
+	df.resolve(found);
+	
+	// TODO: this is in the wrong function . . .
 	// force the images to be cached
 	$.each(localDests, function (ind, dest) {
 	    for (var i = 1; i <= 4; i++) {
@@ -1256,6 +1292,89 @@ com.transitboard.hotel.prototype.updateClock = function () {
     $('#bar-datetime').textfill({maxFontPixels: $('#bar').height() - 5});
 }
 
+
+/**
+ * doNoData: Show the slideshow that is to be shown when no arrivals are 
+ * available
+ * @returns undefined
+*/
+com.transitboard.hotel.prototype.doNoData = function () {
+    var instance = this;
+    // hide this stuff
+    this.active = false;
+    $('#attribution, #container').fadeOut();
+    // load the slideshow text
+    $.ajax({
+	url: (this.util.replaceNone(this.realTimeArrivals.optionsConfig.slideshow) ||
+	      'slideshows/welcome.md'),
+	dataType: 'text', // it's really Markdown
+	success: function (md) {
+	    // we need to parse the Markdown first, in case it uses ref'd images
+	    var converter = Markdown.getSanitizingConverter();
+	    var slides = [];
+	    var i = 0;
+	    slides[0] = $('<div class="slide"></div>');
+	    // loop through the elements, split at <hr>
+	    $(converter.makeHtml(md)).each(function (ind, el) {
+		if ($(el).is('hr')) {
+		    i++;
+		    slides[i] = $('<div class="slide"></div>');
+		}
+		else {
+		    slides[i].append(el);
+		}
+	    });
+	    
+	    // now insert the slides
+	    $('#nodestsshow').html('');
+	    $.each(slides, function (ind, slide) {
+		// already sanitized
+		$('#nodestsshow').append(slide);
+	    });
+
+	    var slides = $('#nodestsshow .slide');
+	    
+	    // scale all the slides
+	    var viewport = {x: $(window).width(), y: $(window).height() - $('#bar').height()};
+	    // vendor prefixes for CSS transforms
+	    var vendorPrefixes = ['', '-moz-', '-ms-', '-webkit-', '-o-'];
+	    slides.each(function (ind, slide) {
+		slide = $(slide);
+		// get the width and height
+		var xy = {x: slide.width(), y: slide.height()};
+		// get the largest scale to make it fit both horizontally and vertically
+		var scale = Math.min(viewport.x/xy.x, viewport.y/xy.y)*0.9;
+		// set the transforms
+		$.each(vendorPrefixes, function (ind, pfx) {
+		    slide.css(pfx + 'transform', 'scale(' + scale + ')');
+		});
+	    });
+
+	    var slide = 0;
+	    var total = slides.length;
+	    // run through the slides every 3 secs
+	    instance.intervals.noDataSlideshow = setInterval(function () {
+		slide += 1;
+
+		// loop forever
+		if (slide >= total)
+		    slide = 0;
+
+		slides.css('display', 'none');
+		slides.eq(slide).css('display', 'block');
+	    }, (instance.util.replaceNone(instance.realTimeArrivals.optionsConfig.slideshowTimeout) || 5) * 1000);
+	}
+    });	    
+};
+
+/**
+ * stopNoData: stop the slideshow
+*/
+com.transitboard.hotel.prototype.stopNoData = function () {
+    clearInterval(this.intervals.noDataSlideshow);
+    $('.slide').css('display', 'none');
+};
+    
 $(document).ready(function () {
     // let it be global during dev, so it's easier to debug
     //var tbdh;
