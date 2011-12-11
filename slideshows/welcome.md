@@ -13,3 +13,9 @@ _Source: [Portland, OR on Wikipedia](http://en.wikipedia.org/wiki/Portland,_Oreg
 * _Portland is awesome_
 * _Powell's is awesome_
 * _TriMet is awesome_
+
+---
+
+# Welcome to Portland
+## Did you know?
+* TriMet 
