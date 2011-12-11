@@ -93,4 +93,6 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;
 		      -moz-transform-origin: left top; 
 		      -webkit-transform-origin: left top; 
 		      -o-transform-origin: left top; 
-		      -ms-transform-origin: left top; }
+		      -ms-transform-origin: left top; 
+		      display: none
+		    }
