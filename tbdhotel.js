@@ -600,7 +600,7 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
     });
 
     // when all the requests return, copy localDests to destinations
-    $.when.apply(null, rqs).done(function () {
+    $.when.apply(null, rqs).then(function () {
 	console.log('finished retrieving destinations');
 	instance.destinations = localDests;
 
@@ -615,14 +615,18 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
 	
 	// if none available, show the slideshow
 	if (!found) {
- 	    instance.active = false;
-	    instance.doNoData();
+	    if (instance.active) {
+ 		instance.active = false;
+		instance.doNoData();
+	    }
 	}
 	else {
-	    // stop the slideshow
-	    instance.stopNoData();
-	    instance.active = true;
-	    instance.showDestination(0);
+	    if (!instance.active) {
+		// stop the slideshow
+		instance.stopNoData();
+		instance.active = true;
+		instance.showDestination(0);
+	    }
 	}
 
 	// allow more requests to be made
@@ -642,6 +646,17 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
 	});
     });
 
+    // if, after 30 seconds, some of the deferreds still have not resolved, resolve them as null (itinerary not found)
+    // and log it to the console
+    setTimeout(function () {
+	$.each(rqs, function (ind, rq) {
+	    if (!rq.isResolved()) {
+		console.log('timeout on request ' + ind); // TODO: destination name?
+		rq.resolve(null);
+	    }
+	});
+    }, 30000);
+    
     return df;
 }
 
