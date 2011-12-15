@@ -30,8 +30,8 @@ _Source: [Wikipedia](http://en.wikipedia.org/)_
 # Welcome to Portland
 ## Did you know?
 * Portland's Union Station opened in 1896?
-* Harbor Drive, a downtown freeway, was removed in 1974 to make room for Tom McCall Waterfront Park?
-* Metro is the only directly-elected planning organization in the US?
+* Harbor Drive, a downtown freeway, was removed in 1974 to make room for<br/>Tom McCall Waterfront Park?
+* Metro is the only directly-elected regional government in the United States?
 
 _Source: [Wikipedia](http://en.wikipedia.org/)_
 
