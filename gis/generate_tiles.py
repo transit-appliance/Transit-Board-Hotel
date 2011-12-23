@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
     # render a single tile when debugging styles
     # single tile render variable: z/x/y
-    if os.environ['SINGLE_TILE_RENDER']:
+    if os.environ.has_key('SINGLE_TILE_RENDER'):
         print 'Doing single tile render'
         # last three are not needed since we don't start the loop
         r = RenderThread(tile_dir, mapfile, Queue(32), threading.Lock(), 18)
