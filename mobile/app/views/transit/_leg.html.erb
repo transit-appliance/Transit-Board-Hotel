@@ -1,0 +1,9 @@
+<li>
+  <% Rails.logger.debug(leg) %>
+  <% if leg.attributes['mode'] == 'Walk' %>
+    Walk to <%= leg.elements['to/description'].text %>
+  <% else %>
+    Board <%= leg.elements['route/name'].text.sub(' to ', ' towards ') %>; 
+    offboard at <%= leg.elements['to/description'].text %>
+  <% end %>
+</li>

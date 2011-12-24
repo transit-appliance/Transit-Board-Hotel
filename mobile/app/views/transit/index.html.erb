@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Transit Board(tm) Hotel Mobile</title>
+    <title><%= params[:destName] %></title>
     <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
     <link rel="stylesheet" href="/javascripts/leaflet-js/leaflet.css" />
     <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
@@ -11,10 +11,15 @@
   <body>
     <div data-role="page" id="tripPage">
       <div data-role="header" id="header">
-	Transit Board Hotel
+	<%= params[:originName] %> to <%= params[:destName] %>
       </div>
 
-      Trip details here.
+      <!-- kind of funky the way stuff is woven here, but it does produce legal HTML. If there is a trip plan,
+	   the following is rendered; elsewise, the div gets closed below -->
+      <% if @tripPlan %>
+      <ul>
+	<%= render :partial => 'transit/leg', :collection => @tripPlan.get_elements('leg') %>
+      </ul>
       <a href="#mapPage" data-role="button" data-rel="dialog" 
 	 data-transition="pop" id="mapLink">Show Map</a>
       <a href="#realPage" data-role="button" data-rel="dialog" data-transition="pop">Real-Time Predictions</a>
@@ -30,9 +35,14 @@
     </div>
 
     <div data-role="real-time" id="realPage">
-      44-Mocks Crest: 10, 12, 17 min
+      44-Mocks Crest: 10, 12, 17 min (fake data)
       <a href="#tripPage" data-rel="back" data-role="button"
 	 data-icon="back">Return to trip</a>
     </div>
+    <% else %> <!-- no trip plan found -->
+    Sorry, we couldn't find a trip plan for the request using the parameters.
+    <!-- TODO: link to TM Mobile Trip Planner so we don't unnecessarily strand people -->
+    </div> <!-- close the div that is inside the if -->
+    <% end %>
   </body>
 </html>
