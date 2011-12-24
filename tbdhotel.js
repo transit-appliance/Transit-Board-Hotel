@@ -14,12 +14,21 @@
    limitations under the License.
 */
 
-if (typeof com == 'undefined') com = {};
-if (com.transitboard == undefined) com.transitboard = {};
+if (typeof com == 'undefined')
+    com = {};
+
+if (com.transitboard == undefined)
+    com.transitboard = {};
 
 if (typeof console == 'undefined') console = {
     log: function (msg) {}};
 
+/**
+ * The constructor for Transit Board (tm) Hotel
+ * @param {object} realTimeArrivals the initial real time data as returned by trArr
+ * @class
+ * @author mattwigway
+ */
 com.transitboard.hotel = function (realTimeArrivals) {
     var instance = this;
     this.realTimeArrivals = realTimeArrivals;
@@ -89,7 +98,11 @@ com.transitboard.hotel = function (realTimeArrivals) {
     this.addAttribution('Walking directions courtesy of <a href="http://www.cloudmade.com/" target="_blank">CloudMade</a>');
 }
 
-// util functions in this namespace
+/**
+ * Utilities go into this namespace to avoid polluting the main scope
+ * @namespace
+ * @author mattwigway
+ */
 com.transitboard.hotel.prototype.util = {};
 
 /**
@@ -97,6 +110,7 @@ com.transitboard.hotel.prototype.util = {};
  * b/c the config tool gives us options like cloudmadeStyle=''
  * @param {object} input The input
  * @returns {object}
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.util.replaceNone = function (input) {
     if (input == '' |
@@ -105,7 +119,10 @@ com.transitboard.hotel.prototype.util.replaceNone = function (input) {
     else return input;
 };
 
-// This jump-starts the display
+/**
+ * This jump-starts the display. It assumes that this.data is already set up. This function also is responsible for much of the option parsing.
+ * @author mattwigway
+ */
 com.transitboard.hotel.prototype.doDisplay = function () {
     var instance = this;
 
@@ -209,6 +226,13 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     });
 }
 
+/**
+ * This shows a destination. It is calls itself back to do the slideshow. It skips if there is no itinerary for a destination, and
+ * it handles calling occasionally {@link showAttribution}.
+ * @see #showAttribution
+ * @param {number} iteration The iteration of the display; an index of this.destinations.
+ * @author mattwigway
+*/
 com.transitboard.hotel.prototype.showDestination = function (iteration) {
     if (!this.active) return;
     var instance = this;
@@ -481,6 +505,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
  * @param {number} index The index of the leg
  * @param {L.Polyline} legGeom The leg geometry in an L.Polyline
  * @param {boolean} panZoom Whether to pan and zoom
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.highlightLeg = function (index, legGeom, panZoom) {
     $('.narrative-leg').removeClass('narrative-highlighted');
@@ -492,6 +517,7 @@ com.transitboard.hotel.prototype.highlightLeg = function (index, legGeom, panZoo
  * Zoom the map to the given bounds
  * @param {L.LatLngBounds} bounds The bounds to zoom to
  * @param {boolean} panZoom Whether to pan and zoom the map
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.zoomToBounds = function (bounds, panZoom) {
     // make sure the map is using its current size; it gets confused
@@ -506,6 +532,12 @@ com.transitboard.hotel.prototype.zoomToBounds = function (bounds, panZoom) {
     this.map.setView(bounds.getCenter(), z, !panZoom);
 }
 
+/**
+ * Show the attribution. It is called by {@link showDestination}.
+ * @see #showDestination
+ * @see #addAttribution
+ * @author mattwigway
+ */
 com.transitboard.hotel.prototype.showAttribution = function () {
     if (!this.active) return;
     var instance = this;
@@ -523,54 +555,57 @@ com.transitboard.hotel.prototype.showAttribution = function () {
     }
 }
 
-// Add an attribution string
+/**
+ * Add an attribution string to the attribution which is displayed occasionally.
+ * The only attribution which is not handled by this is the photo attribution.
+ * @param {string} attr The attribution to display.
+ * @author mattwigway
+*/
 com.transitboard.hotel.prototype.addAttribution = function (attr) {
     $('#attribution span').append(attr + '<br/>');
     // Can't do textfill here b/c object is likely invisible
 }
 
-// This updates the trip plans. It runs occasionally
-// This one is set up exclusively for TriMet
-
-// it should add a .itinerary attribute to each destination, or make it
-// null if there is no trip
-
-/* here is the format of .itinerary
-
-fromPlace (name)
-fromCoord (x,y)
-toPlace
-toCoord
-fare
-time
-start
-end
-legs [ ]
-
-LEGS:
-type == 'walk':
-fromCoord
-fromPlace
-toCoord
-toPlace
-geometry (an array of L.LatLngs)
-time (in mins)
-distance (in meters)
-
-type == 'transit':
-Everything for walk, also:
-routeId (The route ID, not publically shown)
-headsign
-startId (the stop ID of the start, in the format TriMet:8989
-endId
-noStops (the number of stops)
-blockGeoWS (the param for BlockGeoWS, as returned by the TriMet API. Will be
-  retired when OTP hits the scene. Looks like 9045,A,2:12 PM,10579,2:26 PM,8370)
-
-startPlace/endPlace should be the stop or station name.
-
+/** This updates the trip plans. It runs occasionally. This implementation is set up exclusively for TriMet.
+ * It should adds an .itinerary attribute to each destination, or makes it null if there is no trip plan available for whatever reason.
+ *
+ * here is the format of .itinerary
+ *
+ * fromPlace (name)
+ * fromCoord (x,y)
+ * toPlace
+ * toCoord
+ * fare
+ * time
+ * start
+ * end
+ * legs [ ]
+ *
+ * legs:
+ * type == 'walk':
+ * fromCoord
+ * fromPlace
+ * toCoord
+ * toPlace
+ * geometry (an array of L.LatLngs)
+ * time (in mins)
+ * distance (in meters)
+ *
+ * type == 'transit':
+ * Everything for walk, also:
+ * routeId (The route ID, not publically shown)
+ * headsign
+ * startId (the stop ID of the start, in the format TriMet:8989
+ * endId
+ * noStops (the number of stops)
+ * blockGeoWS (the param for BlockGeoWS, as returned by the TriMet API. Will be
+ * retired when OTP hits the scene. Looks like 9045,A,2:12 PM,10579,2:26 PM,8370)
+ *
+ * startPlace/endPlace should be the stop or station name.
+ *
+ * @returns {jQuery.Deferred} The first time it is called, the caller needs to know. The rest of the time, it is async.
+ * @author mattwigway
 */
-
 com.transitboard.hotel.prototype.updateTripPlans = function () {
     var instance = this;
     console.log('updating trip plans');
@@ -664,6 +699,7 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
  * This function handles getting trip plans for a destination
  * @param {object} dest The destination to fetch data for.
  * @returns {jQuery.Deferred} deferred Callbacks attached to this will get the itinerary (described above) upon success.
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.getTripPlanForDest = function (dest) {
     // this consists of two steps: getting the trip plan, and then getting
@@ -689,6 +725,7 @@ com.transitboard.hotel.prototype.getTripPlanForDest = function (dest) {
  * @param {object} dest the destination
  * @returns {jQuery.Deferred} df Callbacks attached will receive the itinerary,
  * less the geometries.
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
     var instance = this;
@@ -901,6 +938,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
  * @param {object} itin The itinerary to complete
  * @returns {jQuery.Deferred} deferred Callbacks will be called with the
  * completed itinerary.
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
     var instance = this;
@@ -937,6 +975,7 @@ com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
  * Reverses the order of coordinates in a coordinate string
  * @param {string} coord The coordinate to reverse
  * @returns {string} the reversed coordinates
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.util.reverseCoord = function (coord) {
     var splitC = coord.split(',');
@@ -949,6 +988,7 @@ com.transitboard.hotel.prototype.util.reverseCoord = function (coord) {
  * If conditions are met, results will have error <= 1 part in 10,000
  * @param {L.LatLng} from
  * @param {L.LatLng} to
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.util.distanceBetween = function (from, to) {
     var startPt = new Proj4js.Point(from.lng, from.lat);
@@ -965,6 +1005,11 @@ com.transitboard.hotel.prototype.util.distanceBetween = function (from, to) {
     return 0.3048 * distance;
 }
 
+/** Store the walk geometries for future use 
+ * @author mattwigway
+*/
+com.transitboard.hotel.prototype.walkGeomCache = {};
+
 /**
  * Get walking directions from fromCoord (x,y/lon,lat) to toCoord
  * @param {string} fromCoord Such as "-122.123,37.363"
@@ -972,8 +1017,8 @@ com.transitboard.hotel.prototype.util.distanceBetween = function (from, to) {
  * @returns {jQuery.Deferred} deferred A Deferred. Callbacks attached will be 
  * called with an object - .length is the length in meters, and .geometry is an
  * array of L.LatLng representing the walk geometry
+ * @author mattwigway
 */
-com.transitboard.hotel.prototype.walkGeomCache = {};
 com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toCoord) {
     var instance = this;
     var df = $.Deferred();
@@ -1064,6 +1109,7 @@ com.transitboard.hotel.prototype.getWalkingDirections = function (fromCoord, toC
  * presumably with geometry, length and time undefined (but the fcn won't check)
  * @returns {jQuery.Deferred} A deferred that will resolve with the argument
  * {geometry: L.LatLng[], length: (int m), time: (int mins)}
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.getTransitGeometry = function (leg) {
     var instance = this;
@@ -1127,6 +1173,7 @@ com.transitboard.hotel.prototype.getTransitGeometry = function (leg) {
  * @param {string} route The route this vehicle is serving
  * @param {string} headsign The headsign of the requested vehicle
  * @returns {arrivalsQueue} A queue of transit arrivals.
+ * @author mattwigway
  */
 com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId, 
 								  route, 
@@ -1160,6 +1207,7 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
  * ignores the headsigns, &c.
  * @param {arrivalsQueue} arrivals
  * @returns {string} like 'Arr, 3 min, 5 min, 8 min, 10 min'
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.formatArrivals = function (arrivals) {
     var retval = ''
@@ -1170,6 +1218,10 @@ com.transitboard.hotel.prototype.formatArrivals = function (arrivals) {
     return retval.slice(0, -2);
 }
 
+/**
+ * Update the weather in the lower-left-hand corner. Called from an interval.
+ * @author mattwigway
+*/
 com.transitboard.hotel.prototype.updateWeather = function () {
     var instance = this;
     this.weather = {};
@@ -1286,7 +1338,10 @@ com.transitboard.hotel.prototype.updateWeather = function () {
 }
 						    
 
-// update the clock, called every 15s
+/**
+ * update the clock, called every 15s from an interval
+ * @author mattwigway
+ */
 com.transitboard.hotel.prototype.updateClock = function () {
     var now = localTime();
     // is monday 0 in some places?
@@ -1312,6 +1367,7 @@ com.transitboard.hotel.prototype.updateClock = function () {
  * doNoData: Show the slideshow that is to be shown when no arrivals are 
  * available
  * @returns undefined
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.doNoData = function () {
     var instance = this;
@@ -1384,6 +1440,7 @@ com.transitboard.hotel.prototype.doNoData = function () {
 
 /**
  * stopNoData: stop the slideshow
+ * @author mattwigway
 */
 com.transitboard.hotel.prototype.stopNoData = function () {
     clearInterval(this.intervals.noDataSlideshow);
