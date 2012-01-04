@@ -142,7 +142,19 @@ exports.index = function(req, res){
 	res.render('notfound', { status: 404, id: itinID, title: 'Not Found' });
     }
     else {
-	console.log(itin);
+	// reverse if needed
+	if (req.param('reverse', false) == 'true') var reverse = true;
+	else var reverse = false;
+
+	if (reverse) {
+	    var itin = {
+		fromPlace: itin.toPlace,
+		fromCoord: itin.toCoord,
+		toPlace  : itin.fromPlace,
+		toCoord  : itin.fromCoord
+	    }
+	}
+	
 	// get a trip plan
 	getTripPlan(itin, function (tp) {
 	    if (tp == null) legs = false; // indicate to the view that no trip was found
@@ -155,7 +167,7 @@ exports.index = function(req, res){
 	    }
 	    res.render('index', {title: itin.fromPlace + ' to ' + itin.toPlace, legs: legs, 
 				 fromPlace: itin.fromPlace, toPlace: itin.toPlace,
-				 reverse: false });
+				 reverse: reverse});
 	});
     }
 };
