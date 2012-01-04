@@ -321,6 +321,7 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     // set up the narrative
     var time = 0;
     var narr = '';
+    var isFirstTransitLeg = true; // only the first transit leg should show real-time arrivals
     $.each(dest.itinerary.legs, function (ind, leg) {
 	if (leg.type == 'walk') {
 	    // capitalize first
@@ -334,19 +335,26 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	else if (leg.type == 'transit') {
 	    if (ind == 0) var lett = 'B';
 	    else var lett = 'b';
+
+	    if (isFirstTransitLeg) {
+		var arrivals = ' <span class="rtarrivals">(next: ' + 
+		    // agency is hard-wired for now
+		    instance.formatArrivals(
+			instance.getRealTimeArrivals(
+			    'TriMet:' + leg.startId,
+			    leg.routeId,
+			    leg.headsign
+			)
+		    ) +
+		    ')</span>,';
+		isFirstTransitLeg = false;
+	    }
+	    // leave them out, just put a comma for grammatical correctness
+	    else var arrivals = ',';
+
 	    narr += '<span id="narrative-leg-' + ind + 
 		'" class="narrative-leg">' + 
-		lett + 'oard ' + leg.headsign +
-		' <span class="rtarrivals">(next: ' + 
-		// agency is hard-wired for now
-		instance.formatArrivals(
-		    instance.getRealTimeArrivals(
-			'TriMet:' + leg.startId,
-			leg.routeId,
-			leg.headsign
-		    )
-		) +
-		')</span>,' +
+		lett + 'oard ' + leg.headsign + arrivals +
 		' offboard at ' + leg.toPlace + 
 		' (' + leg.noStops + ' stops)' +
 		'</span>, ';
@@ -786,20 +794,23 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 	    // loop through the itineraries, find the lowest-cost one
 	    data.find('itinerary').each(function(ind, itin) {
 		itin = $(itin);
-		// make sure it fits hard requirements (0 transfers,
-		// allowed stop), frequent service
-		// TODO: allowed stop
+		// make sure it fits hard requirements: allowed stop, frequent service, &c.
+
+		/*
 		if (itin.find('numberOfTransfers').text() != '0') {
 		    console.log('Trip has transfers!');
 		    return true;
 		}
-	    
+		*/
 					
 		// We don't handle throughroutes yet (issue 43)
+		/*
 		if (Number(itin.find('numberOfTripLegs').text()) > 3) {
 		    console.log('Too many trip legs, probably issue 43!');
 		    return true;
 		}
+		*/
+		// TODO: handle throughroutes when formulating narrative
 
 		// route 90 is an alternate number for MAX
 		// 90: MAX Red Line
@@ -811,15 +822,22 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 				   '15', '33', '54', '56', '57',
 				   '72', '75', '90', '100', '190', '193',
 				   '200'];
-		if ($.inArray(itin.find('leg route internalNumber')
-			      .first().text(), 
-			      freqService) == -1) {
-		    console.log('route ' + 
-				itin.find('leg route internalNumber')
-				.first().text() +
-				' is not Frequent Service');
-		    return true;
-		}
+		var isFreqService = true;
+		itin.find('leg route internalNumber').each(function () {
+		    if ($.inArray($(this).text(), freqService) == -1) {
+			console.log('route ' + 
+				    itin.find('leg route internalNumber')
+				    .first().text() +
+				    ' is not Frequent Service');
+			isFreqService = false;
+
+			// no need to check any more
+			return false;
+		    }
+		});
+
+		// proceed to the next itinerary
+		if (!isFreqService) return true;
 
 		// these two tests are both transfer safe, b/c we only care about restrictions on the first legs
 		// stop id of this itin
@@ -831,8 +849,7 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		}
 
 		// check for allowed route
-		// it should either be explicitly stated or included with *. We assume that all routes
-		// TP suggests are also in the real time feed.
+		// it should either be explicitly stated or included with * in the appliance def
 		var rid = itin.find('leg route internalNumber').first().text();
 		if (instance.realTimeArrivals.stopsConfig.TriMet[sid][rid] == undefined &
 		    instance.realTimeArrivals.stopsConfig.TriMet[sid]['*'] == undefined) {
@@ -1188,7 +1205,7 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
     }
     catch (err) {
 	// return an empty arrivalsQueue
-	console.log('no arrivals found');
+	console.log('no arrivals found for stopId: ' + stopId + ', route ' + route + ', headsign ' + headsign);
 	return new arrivalsQueue();
     }
     // in case the headsign does not match
