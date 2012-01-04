@@ -1,5 +1,5 @@
 /*
-   Copyright 2011 Portland Transport
+   Copyright 2011-2012 Portland Transport
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0;
 .narrative-highlighted { color: #009900 }
 
 /* the real time arrivals, in parens */
-.rtarrivals { font-size: 65%; color: #333333}
+.rtarrivals { font-size: 65%; }
 
 /* position is relative so that the attr will be positioned relative to the
    slide */
