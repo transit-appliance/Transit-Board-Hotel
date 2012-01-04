@@ -1,5 +1,5 @@
 /*
-   Copyright 2011 Portland Transport
+   Copyright 2011-2012 Portland Transport
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -1355,10 +1355,10 @@ com.transitboard.hotel.prototype.updateClock = function () {
     if (now.getHours() >= 12) var ap = 'PM';
     else                      var ap = 'AM';
 
-    var time = days[now.getDay()] + ' ' + hour + ':' + 
-	mins + ' ' + ap;
+    var time = days[now.getDay()] + '&nbsp;' + hour + ':' + 
+	mins + '&nbsp;' + ap;
 
-    $('#bar-datetime span').text(time);
+    $('#bar-datetime span').html(time);
     $('#bar-datetime').textfill({maxFontPixels: $('#bar').height() - 5});
 }
 
