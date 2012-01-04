@@ -1,2 +1,43 @@
-<h1><%= title %></h1>
-<p>Welcome to <%= title %></p>
+<div data-role="page" id="tripPage">
+  <div data-role="header" id="header">
+    <%= fromPlace %> to <%= toPlace %>
+  </div>
+
+  <!-- kind of funky the way stuff is woven here, but it does produce legal HTML. If there is a trip plan,
+       the following is rendered; elsewise, the div gets closed below -->
+  <% if (legs) { %>
+  <ul>
+    <!-- http://stackoverflow.com/questions/7415641/cradle-express-ejs-convert-html-to-its-entities -->
+    <%- partial('leg', {collection: legs}) %>
+  </ul>
+  <a href="#mapPage" data-role="button" data-rel="dialog" 
+     data-transition="pop" id="mapLink">Show Map</a>
+  <a href="#realPage" data-role="button" data-rel="dialog" data-transition="pop">Real-Time Predictions</a>
+
+  <% if (!reverse) { %>
+     <a href="?reverse=true" data-role="button">Reverse Trip</a>
+  <% } else { %>
+     <a href="?reverse=false" data-role="button">Reverse Trip</a>
+  <% } %>
+</div>
+
+<div data-role="page" id="mapPage">
+  <div id="map">
+    Hate to say it, but it looks like your device doesn't support the map.
+  </div>
+
+  <a href="#tripPage" data-rel="back" data-role="button"
+     id="mapReturnBtn" data-icon="back">Return to trip</a>
+</div>
+
+<div data-role="real-time" id="realPage">
+  44-Mocks Crest: 10, 12, 17 min (fake data)
+  <a href="#tripPage" data-rel="back" data-role="button"
+     data-icon="back">Return to trip</a>
+</div>
+<% } else { %> <!-- no trip plan found -->
+Bother, we couldn't find a trip to <%= toPlace %>. The <a href="http://m.trimet.org">TriMet Mobile Site</a> might have a suggestion,
+or you could call TriMet at <a href="tel:+15032387433">+1-503-238-RIDE (7433)</a>.
+</div> <!-- close the div that is inside the if -->
+<% } %>
+

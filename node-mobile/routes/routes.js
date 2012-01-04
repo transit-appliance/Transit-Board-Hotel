@@ -145,7 +145,17 @@ exports.index = function(req, res){
 	console.log(itin);
 	// get a trip plan
 	getTripPlan(itin, function (tp) {
-	    res.render('index', { title: itinID });
+	    if (tp == null) legs = false; // indicate to the view that no trip was found
+	    // really cheesy, but all I could figure out so that view gets a jQ obj not a DOM one
+	    else {
+		legs = [];
+		tp.find('leg').each(function (ind, leg) {
+		    legs.push($(leg));
+		});
+	    }
+	    res.render('index', {title: itin.fromPlace + ' to ' + itin.toPlace, legs: legs, 
+				 fromPlace: itin.fromPlace, toPlace: itin.toPlace,
+				 reverse: false });
 	});
     }
 };
@@ -196,7 +206,7 @@ exports.newUrl = function (req, res) {
     var data = {};
     // http://stackoverflow.com/questions/6912584/how-to-get-get-query-string-variables-in-node-js
     data.fromCoord = req.query.fromCoord;
-    data.from      = req.query.fromPlace;
+    data.fromPlace = req.query.fromPlace;
     data.toCoord   = req.query.toCoord;
     data.toPlace   = req.query.toPlace;
     // delete after 24 hours
