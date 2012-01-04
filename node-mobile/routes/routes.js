@@ -18,8 +18,12 @@ cradle.setup({
 var conn = new cradle.Connection();
 */
 
+var querystring = require('querystring');
+var request = require('request');
+var $ = require('jquery'); // wouldn't parse XML without it.
+
 // length of the codes for trips
-var CODE_LENGTH = 3;
+var CODE_LENGTH = 5;
 var itineraries = {};
 
 /**
@@ -29,10 +33,101 @@ setInterval(function () {
     var now = new Date().getTime();
     for (var i in itineraries) {
 	if (now < itineraries[i].lifetime) {
+	    console.log('clearing ' + i);
 	    itineraries[i] = undefined;
 	}
     }
-}, 10 * 60 * 1000);
+}, 30 * 60 * 1000);
+
+/**
+ * get a trip plan from the TriMet WS
+ * @param {object} itin the itinerary
+ * @param {function} cb the callback
+ */
+function getTripPlan(itin, cb) {
+    var now = new Date (); // time zone?
+
+    var hour = now.getHours() % 12;
+    var mins = now.getMinutes();
+    
+    if (mins < 10) mins = '0' + mins;
+
+    if (hour == 0) hour = 12;
+    if (now.getHours() >= 12) var ap = 'pm';
+    else                      var ap = 'am';
+
+    var time = hour + ':' + mins + ' ' + ap;
+
+    // build the URL
+    params = {
+	fromCoord: itin.fromCoord,
+	fromPlace: itin.fromPlace,
+	toCoord:   itin.toCoord,
+	toPlace:   itin.toPlace,
+	time:      time,
+	Min:       'X', // fewest transfers
+	appID:     '828B87D6ABC0A9DF142696F76'
+    };
+
+    // http://stackoverflow.com/questions/6554039/how-do-i-url-encode-something-in-node-js
+    var qs = querystring.stringify(params);
+    var wsurl = 'http://developer.trimet.org/ws/V1/trips/tripplanner?' + qs;
+    
+    request(wsurl, function (err, res, body) {
+	if (!err && res.statusCode == 200) {
+	    // choose the best itinerary
+	    // should probably try to share code with tbdhotel.js, but this is a 
+	    // bit different because we never throw itineraries out but only cost against them.
+	    // a long itinerary is better than none at all.
+	    var lowcost = Infinity;
+	    var bestItin = null;
+	    $(body).find('itinerary').each(function (ind, itin) {
+		var itin = $(itin);
+		
+		// TODO: handle throughroutes when formulating narrative
+
+		// in the mobile app, 
+
+		// route 90 is an alternate number for MAX
+		// 90: MAX Red Line
+		// 100: MAX Blue Line
+		// 190: MAX Yellow Line
+		// 193: Streetcar
+		// 200: MAX Green Line
+		var freqService = ['4', '6', '8', '9', '12', '14',
+				   '15', '33', '54', '56', '57',
+				   '72', '75', '90', '100', '190', '193',
+				   '200'];
+		var isFreqService = true;
+		itin.find('leg route internalNumber').each(function () {
+		    if ($.inArray($(this).text(), freqService) == -1) {
+			console.log('route ' + 
+				    itin.find('leg route internalNumber')
+				    .first().text() +
+				    ' is not Frequent Service');
+			isFreqService = false;
+		    }
+		});
+
+		var cost = Number(itin.find('time-distance duration').first().text()) +
+		    0.1 * Number(itin.find('fare regular').first().text());
+
+		// penalize equivalent of 30 mins for non-frequent-service route
+		if (!isFreqService) cost += 30;
+
+		if (cost < lowcost) {
+		    bestItin = itin;
+		    lowcost = cost;
+		}
+	    });
+	    cb(bestItin);
+	}
+	else {
+	    cb(null);
+	}
+    });
+}
+
 
 /** 
  * Index: grab the requested trip from the 3 character identifier
@@ -47,7 +142,11 @@ exports.index = function(req, res){
 	res.render('notfound', { status: 404, id: itinID, title: 'Not Found' });
     }
     else {
-	res.render('index', { title: itinID })
+	console.log(itin);
+	// get a trip plan
+	getTripPlan(itin, function (tp) {
+	    res.render('index', { title: itinID });
+	});
     }
 };
 
@@ -95,12 +194,13 @@ exports.newUrl = function (req, res) {
 
     // create and validate the data structure
     var data = {};
-    data.fromCoord = req.params.fromCoord;
-    data.from      = req.params.fromPlace;
-    data.toCoord   = req.params.toCoord;
-    data.toPlace   = req.params.toPlace;
+    // http://stackoverflow.com/questions/6912584/how-to-get-get-query-string-variables-in-node-js
+    data.fromCoord = req.query.fromCoord;
+    data.from      = req.query.fromPlace;
+    data.toCoord   = req.query.toCoord;
+    data.toPlace   = req.query.toPlace;
     // delete after 24 hours
-    data.lifetime  = new Date().getTime() + 1 * 10 * 60 * 1000;
+    data.lifetime  = new Date().getTime() + 24 * 60 * 60 * 1000;
 
     if (isValid(data)) {
 	itineraries[code] = data;
