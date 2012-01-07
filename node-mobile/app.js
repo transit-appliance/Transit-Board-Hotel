@@ -30,6 +30,9 @@ app.configure('production', function(){
 // Routes
 
 app.get('/new', routes.newUrl);
+// :bksid is the parameter for lineURL to the TriMet server
+app.get('/transit/:title/:bksid', routes.transitmap);
+app.get('/walk/:title/:from/:to', routes.walkmap);
 app.get('/:id', routes.index);
 
 app.listen(3000);

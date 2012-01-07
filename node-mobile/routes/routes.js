@@ -77,8 +77,12 @@ function getTripPlan(itin, cb) {
     var qs = querystring.stringify(params);
     var wsurl = 'http://developer.trimet.org/ws/V1/trips/tripplanner?' + qs;
     
+    console.log(wsurl);
+
     request(wsurl, function (err, res, body) {
 	if (!err && res.statusCode == 200) {
+	    console.log(body);
+
 	    // choose the best itinerary
 	    // should probably try to share code with tbdhotel.js, but this is a 
 	    // bit different because we never throw itineraries out but only cost against them.

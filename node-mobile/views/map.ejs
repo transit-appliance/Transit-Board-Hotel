@@ -2,5 +2,8 @@
   <div data-role="header" id="mapHeader">
     <%= title %>
   </div>
-  <img src="<%= imgurl %>" />
+  <img src="<%= imgurl %>" /><br/>
+  <!-- prefer history.back if available -->
+  <a href="<%= referrer %>" data-rel="back" data-role="button"
+     data-icon="back" onclick="history.back(); return false;">Back to Trip Plan</a>
 </div>

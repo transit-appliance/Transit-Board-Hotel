@@ -10,8 +10,7 @@
     <!-- http://stackoverflow.com/questions/7415641/cradle-express-ejs-convert-html-to-its-entities -->
     <%- partial('leg', {collection: legs}) %>
   </ul>
-  <a href="#mapPage" data-role="button" data-rel="dialog" 
-     data-transition="pop" id="mapLink">Show Map</a>
+
   <a href="#realPage" data-role="button" data-rel="dialog" data-transition="pop">Real-Time Predictions</a>
 
   <% if (!reverse) { %>
@@ -19,15 +18,6 @@
   <% } else { %>
      <a href="?reverse=false" data-role="button">Reverse Trip</a>
   <% } %>
-</div>
-
-<div data-role="page" id="mapPage">
-  <div id="map">
-    Hate to say it, but it looks like your device doesn't support the map.
-  </div>
-
-  <a href="#tripPage" data-rel="back" data-role="button"
-     id="mapReturnBtn" data-icon="back">Return to trip</a>
 </div>
 
 <div data-role="real-time" id="realPage">
