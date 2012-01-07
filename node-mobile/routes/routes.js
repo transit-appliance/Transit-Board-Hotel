@@ -32,7 +32,7 @@ var itineraries = {};
 setInterval(function () {
     var now = new Date().getTime();
     for (var i in itineraries) {
-	if (now < itineraries[i].lifetime) {
+	if (now > itineraries[i].lifetime) {
 	    console.log('clearing ' + i);
 	    itineraries[i] = undefined;
 	}
@@ -167,7 +167,7 @@ exports.index = function(req, res){
 	    }
 	    res.render('index', {title: itin.fromPlace + ' to ' + itin.toPlace, legs: legs, 
 				 fromPlace: itin.fromPlace, toPlace: itin.toPlace,
-				 reverse: reverse});
+				 reverse: reverse, stopId: tp.find('leg from stopId').first().text()});
 	});
     }
 };

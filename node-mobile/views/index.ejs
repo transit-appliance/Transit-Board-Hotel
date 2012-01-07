@@ -31,7 +31,13 @@
 </div>
 
 <div data-role="real-time" id="realPage">
-  44-Mocks Crest: 10, 12, 17 min (fake data)
+  <!-- We just put in a link to Transit Tracker. On mobile devices that support it, this will be replaced with the actual arrivals. -->
+  <span id="realTimeArrivals">
+    View real-time arrivals on 
+    <a href="http://trimet.org/arrivals/small/tracker?locationID=<%= stopId %>">
+       TriMet's Transit Tracker
+    </a>
+  </span>
   <a href="#tripPage" data-rel="back" data-role="button"
      data-icon="back">Return to trip</a>
 </div>
