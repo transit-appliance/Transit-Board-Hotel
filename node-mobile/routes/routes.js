@@ -21,6 +21,10 @@ var conn = new cradle.Connection();
 var querystring = require('querystring');
 var request = require('request');
 var $ = require('jquery'); // wouldn't parse XML without it.
+var Proj4js = require('proj4js');
+
+// not included in node p4js
+Proj4js.defs["EPSG:2913"] = '+proj=lcc +lat_1=46 +lat_2=44.33333333333334 +lat_0=43.66666666666666 +lon_0=-120.5 +x_0=2500000.0001424 +y_0=0 +ellps=GRS80 +to_meter=0.3048 +no_defs';
 
 // length of the codes for trips
 var CODE_LENGTH = 5;
@@ -233,3 +237,68 @@ exports.newUrl = function (req, res) {
 	res.end('bad data\n');
     }
 };
+
+/**
+ * Render a walking map using CloudMade Static Maps. At some point we will use Leaflet to also allow panning the maps.
+ */
+exports.transitmap = function (req, res) {
+    // fetch the TriMet WS and reproject
+    var params = {
+	appID: '828B87D6ABC0A9DF142696F76',
+	// I think this stands for block, start time, start stop ID, 
+	// end time, end ID.
+	bksTsIDeTeID: req.param('bksid')
+    }
+    var url = 'http://maps.trimet.org/ttws/transweb/ws/V1/BlockGeoWS?' + querystring.stringify(params);
+
+    request(url, function (err, resp, body) {
+	if (!err && resp.statusCode == 200) {
+	    // no trickery to do this in Node!
+	    var data = JSON.parse(body);
+	    
+	    	    // reproject OSPN -> 4326 Lat Lon
+	    var the_geom = [];
+
+	    // Oregon State Plane North, NAD83(HARN)
+	    var from_proj = new Proj4js.Proj('EPSG:2913');
+	    var to_proj = new Proj4js.Proj('EPSG:4326');
+
+	    var bbox = {
+		left: Infinity,
+		right: -Infinity,
+		top: -Infinity,
+		bot: Infinity
+	    };
+
+	    // should only be one result for a single leg
+	    $.each(data.results[0].points, function (ind, pt) {
+		var point = new Proj4js.Point(pt.x, pt.y);
+		Proj4js.transform(from_proj, to_proj, point);
+		// commented out because it produces thousands upon 
+		// thousands of lines of output
+		console.log('transformed ' + pt.x + ',' + pt.y + ' to ' +
+			    point.x + ',' + point.y);
+		the_geom.push(point.y + ',' + point.x);
+
+		if (point.x < bbox.left) bbox.left = point.x;
+		if (point.x > bbox.right) bbox.right = point.x;
+		if (point.y > bbox.top) bbox.top = point.y;
+		if (point.y < bbox.bot) bbox.bot = point.y;
+	    });
+
+	    var path = the_geom.join('|');
+
+	    var cmparams = {
+		size: '320x320',
+		bbox: [bbox.bot, bbox.left, bbox.top, bbox.right].join(','),
+		path: 'color:0x3333dd|weight:7|opacity:1.0|' + path
+	    };
+
+	    var imgurl = 'http://staticmaps.cloudmade.com/2d634343963a4426b126ab70b62bba2a/staticmap?' + querystring.stringify(cmparams);
+
+	    // referer [sic]
+	    res.render('map', {title: req.param('title'), imgurl: imgurl, referrer: req.headers['referer']});
+	}
+    });
+};
+	    
