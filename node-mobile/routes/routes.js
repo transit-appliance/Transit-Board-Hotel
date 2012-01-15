@@ -243,7 +243,54 @@ exports.newUrl = function (req, res) {
 };
 
 /**
- * Render a walking map using CloudMade Static Maps. At some point we will use Leaflet to also allow panning the maps.
+ * Render a walking map using CloudMade Static Maps.
+ */
+exports.walkmap = function (req, res) {
+    var url = 'http://routes.cloudmade.com/2d634343963a4426b126ab70b62bba2a/api/0.3/' + req.param('from') + ',' + req.param('to') + 
+	'/foot.js?lang=en&units=km';
+
+    request(url, function (err, resp, body) {
+	if (!err && resp.statusCode == 200) {
+	    var data = JSON.parse(body);
+	    if (data.status == 0) {
+		// build the_geom
+		var the_geom = [];
+
+		var bbox = {
+		    left: Infinity,
+		    right: -Infinity,
+		    top: -Infinity,
+		    bot: Infinity
+		};
+
+		$.each(data.route_geometry, function (ind, pt) {
+		    if (pt[1] < bbox.left) bbox.left = pt[1];
+		    if (pt[1] > bbox.right) bbox.right = pt[1];
+		    if (pt[0] > bbox.top) bbox.top = pt[0];
+		    if (pt[0] < bbox.bot) bbox.bot = pt[0];
+		    the_geom.push(pt.join(','));
+		});
+
+		var cmparams = {
+		    size: '320x320',
+		    bbox: [bbox.bot, bbox.left, bbox.top, bbox.right].join(','),
+		    path: 'color:0x3333dd|weight:7|opacity:1.0|' + the_geom.join('|')
+		};
+
+		var imgurl = 'http://staticmaps.cloudmade.com/2d634343963a4426b126ab70b62bba2a/staticmap?' + querystring.stringify(cmparams);
+
+		res.render('map', {title: req.param('title'), imgurl: imgurl, referrer: req.headers['referer']});
+	    }
+	    console.log('CloudMade status is ' + data.status + ', ' + data.status_message);
+	}
+	console.log('HTTP status is ' + resp.statusCode)
+    });
+};
+		
+		
+
+/**
+ * Render a transit map using CloudMade Static Maps. At some point we will use Leaflet to also allow panning the maps.
  */
 exports.transitmap = function (req, res) {
     // fetch the TriMet WS and reproject

@@ -1,6 +1,7 @@
 <li>
   <% if (leg.attr('mode') == 'Walk') { %>
     Walk to <%= leg.find('to description').text() %>
+    (<a href="/walk/<%= encodeURIComponent(leg.find('from description').text())%>%20to%20<%= encodeURIComponent(leg.find('to description').text()) %>/<%= leg.find('from pos lat').text() %>,<%= leg.find('from pos lon').text() %>/<%= leg.find('to pos lat').text() %>,<%= leg.find('to pos lon').text() %>">map</a>)
   <% } else { %>
     At <%= leg.find('time-distance startTime').text() %>,
     board <%= leg.find('route name').text().replace(' to ', ' towards ') %>; 
