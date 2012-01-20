@@ -79,7 +79,9 @@ com.transitboard.hotel = function (realTimeArrivals) {
 		dataOut.type = "Feature";
 		dataOut.properties = {};
 		for (var p in data.properties) {
-		    dataOut.properties[p] = instance.util.sanitize(data.properties[p]);
+		    if (data.properties[p] != null) {
+			dataOut.properties[p] = instance.util.sanitize(data.properties[p]);
+		    }
 		}
 	   
 		instance.destinations.push(dataOut);
@@ -968,7 +970,7 @@ com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
 	    // no need to sanitize this, and it might make a mess if we did.
 	    itin.legs[ind].geometry = result.geometry;
 	    itin.legs[ind].length = instance.util.sanitize(result.length);
-	    itin.legs[ind].time = instance.util.sanitize(result.time);
+	    itin.legs[ind].time = Number(instance.util.sanitize(result.time));
 	});
 	rqs.push(rq);
     });	   
