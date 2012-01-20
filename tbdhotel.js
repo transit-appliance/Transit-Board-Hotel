@@ -74,7 +74,15 @@ com.transitboard.hotel = function (realTimeArrivals) {
 		destIds[i],
 	    dataType: 'jsonp',
 	    success: function (data) {
-		instance.destinations.push(data);
+		var dataOut = {};
+		dataOut.geometry = data.geometry;
+		dataOut.type = "Feature";
+		dataOut.properties = {};
+		for (var p in data.properties) {
+		    dataOut.properties[p] = instance.util.sanitize(data.properties[p]);
+		}
+	   
+		instance.destinations.push(dataOut);
 	    },
 	    error: function () { 
 		console.log('error retrieving destination ' + destIds[i]);
@@ -562,7 +570,7 @@ com.transitboard.hotel.prototype.showAttribution = function () {
  * @author mattwigway
 */
 com.transitboard.hotel.prototype.addAttribution = function (attr) {
-    $('#attribution span').append(attr + '<br/>');
+    $('#attribution span').append(this.util.sanitize(attr) + '<br/>');
     // Can't do textfill here b/c object is likely invisible
 }
 
@@ -879,12 +887,12 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 		bestItin.find('leg').each(function (ind, leg) {
 		    leg = $(leg);
 		    var legOut = {};
-		    legOut.fromCoord = leg.find('from pos lon').text() + 
-			',' + leg.find('from pos lat').text();
-		    legOut.fromPlace = leg.find('from description').text();
-		    legOut.toCoord = leg.find('to pos lon').text() + 
-			',' + leg.find('to pos lat').text();
-		    legOut.toPlace = leg.find('to description').text();
+		    legOut.fromCoord = instance.util.sanitize(leg.find('from pos lon').text() + 
+							  ',' + leg.find('from pos lat').text());
+		    legOut.fromPlace = instance.util.sanitize(leg.find('from description').text());
+		    legOut.toCoord = instance.util.sanitize(leg.find('to pos lon').text() + 
+							  ',' + leg.find('to pos lat').text());
+		    legOut.toPlace = instance.util.sanitize(leg.find('to description').text());
 		    var from = instance.util.reverseCoord(legOut.fromCoord)
 			.split(',');
 		    var to = instance.util.reverseCoord(legOut.toCoord)
@@ -901,16 +909,16 @@ com.transitboard.hotel.prototype.getTripPlanOnly = function (dest) {
 			legOut.type = 'transit'
 			// some (bus) routes have leading spaces that the real time arrivals service does
 			// not have.
-			legOut.headsign = $.trim(leg.find('route name').text());
+			legOut.headsign = instance.util.sanitize($.trim(leg.find('route name').text()));
 			legOut.time = Number(leg.find('time-distance duration').text());
-			legOut.startId = leg.find('from stopId').text();
-			legOut.endId = leg.find('to stopId').text();
-			legOut.routeId = leg.find('route internalNumber').text();
+			legOut.startId = instance.util.sanitize(leg.find('from stopId').text());
+			legOut.endId = instance.util.sanitize(leg.find('to stopId').text());
+			legOut.routeId = instance.util.sanitize(leg.find('route internalNumber').text());
 			legOut.noStops = 
 			    Number(leg.find('to stopSequence').text()) -
 			    Number(leg.find('from stopSequence').text());
 			// for the geometries
-			legOut.blockGeoWS = leg.find('lineURL').attr('param');
+			legOut.blockGeoWS = instance.util.sanitize(leg.find('lineURL').attr('param'));
 		    }
 		    itinOut.legs.push(legOut);
 		});
@@ -957,9 +965,10 @@ com.transitboard.hotel.prototype.fillOutGeometries = function (itin) {
 	 
 	// no need for two deferreds, b/c callbacks are called in order
 	rq.then(function (result) {
+	    // no need to sanitize this, and it might make a mess if we did.
 	    itin.legs[ind].geometry = result.geometry;
-	    itin.legs[ind].length = result.length;
-	    itin.legs[ind].time = result.time;
+	    itin.legs[ind].length = instance.util.sanitize(result.length);
+	    itin.legs[ind].time = instance.util.sanitize(result.time);
 	});
 	rqs.push(rq);
     });	   
@@ -1003,7 +1012,27 @@ com.transitboard.hotel.prototype.util.distanceBetween = function (from, to) {
     var distance = Math.sqrt(Math.pow((startPt.x - endPt.x), 2) + Math.pow((startPt.y - endPt.y), 2));
     // convert to meters
     return 0.3048 * distance;
-}
+};
+
+/** Sanitize HTML using Caja.
+ *  Wrap in a function to preserve private persistent scope.
+ */
+(function () {
+    function cleanURL (url) {
+	// disallow absolute links
+	if (!(/:/.test(url))) {
+	    return url;
+	}
+    }
+    
+    function cleanClassID(cid) {
+	return cid;
+    }
+
+    com.transitboard.hotel.prototype.util.sanitize = function (theHtml) {
+	return html_sanitize(theHtml, cleanURL, cleanClassID);
+    }
+})();
 
 /** Store the walk geometries for future use 
  * @author mattwigway
@@ -1210,9 +1239,10 @@ com.transitboard.hotel.prototype.getRealTimeArrivals =  function (stopId,
  * @author mattwigway
 */
 com.transitboard.hotel.prototype.formatArrivals = function (arrivals) {
+    var instance = this;
     var retval = ''
     $.each(arrivals, function (ind, arr) {
-	retval += arr.minutes() + '&nbsp;min, '
+	retval += instance.util.sanitize(arr.minutes()) + '&nbsp;min, '
     });
     // get rid of the last ', '
     return retval.slice(0, -2);
@@ -1240,12 +1270,15 @@ com.transitboard.hotel.prototype.updateWeather = function () {
 		'%22%20LIMIT%201&format=json',
 	    dataType: 'json',
 	    success: function (data) {
-		instance.weather.woeid = data.query.results.place.postal;
+		instance.weather.woeid = instance.util.sanitize(data.query.results.place.postal);
 	    }
 	});
     }
-    else 
-	var woeid_xhr = true;
+    else {
+	//console.log('in else');
+	var woeid_xhr = new $.Deferred();
+	woeid_xhr.resolve();
+    }
 
     // Use $.when to wait for the request to complete; if no request was made
     // just go ahead
@@ -1259,8 +1292,10 @@ com.transitboard.hotel.prototype.updateWeather = function () {
 	    url: url,
 	    dataType: 'json',
 	    success: function (data) {
-		instance.weather.condition = 
-		    data.query.results.channel.item.condition;
+		instance.weather.condition = {};
+		for (var p in data.query.results.channel.item.condition) {
+		    instance.weather.condition[p] = instance.util.sanitize(data.query.results.channel.item.condition[p]);
+		}
 		var text = instance.weather.condition.temp + '&deg; F/' +
 		    Math.round((Number(instance.weather.condition.temp) - 32) * (5/9)) +
 		    '&deg; C';
