@@ -1359,7 +1359,7 @@ com.transitboard.hotel.prototype.updateWeather = function () {
 		    '45': 'weather-icons/storm-100px.png', // thundershowers
 		    '46': 'weather-icons/snow-100px.png', // snow showers
 		    '47': 'weather-icons/storm-100px.png', // isolated thundershowers
-		    '3200': '', // not available
+		    '3200': '' // not available
 		}
 
 		// The height is already set once, to prevent drift; if it
