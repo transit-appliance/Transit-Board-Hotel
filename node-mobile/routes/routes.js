@@ -77,12 +77,10 @@ function getTripPlan(itin, cb) {
    // http://stackoverflow.com/questions/6554039/how-do-i-url-encode-something-in-node-js
    var qs = querystring.stringify(params);
    var wsurl = 'http://developer.trimet.org/ws/V1/trips/tripplanner?' + qs;
-   
-   console.log(wsurl);
+  
 
    request(wsurl, function (err, res, body) {
       if (!err && res.statusCode == 200) {
-         console.log(body);
 
          // choose the best itinerary
          // should probably try to share code with tbdhotel.js, but this is a 
