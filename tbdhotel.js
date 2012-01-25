@@ -280,25 +280,28 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     // put text in spans so it will be resized
     $('#main-text').html('<span>' + dest.properties.name + '</span>');
     if (dest.properties.subtitle != null) {
-	$('#subhead').html('<span>'+dest.properties.subtitle+'</span>');
+	    $('#subhead').html('<span>'+dest.properties.subtitle+'</span>');
 	
-	// now, allocate screen real estate
-	var totalText = dest.properties.name.length + 
-	    dest.properties.subtitle.length;
-	// The weighting factors here were found by trial and (mostly) error
-	var percentName = 85 * dest.properties.name.length / totalText;
-	var percentSub = 70 - percentName;
+	    // now, allocate screen real estate
+	    var totalText = dest.properties.name.length + 
+	        dest.properties.subtitle.length;
+	    // The weighting factors here were found by trial and (mostly) error
+	    var percentName = 70 * dest.properties.name.length / totalText;
+	    var percentSub = 70 - percentName;
     }
     // no subtitle
     else {
-	var percentName = 100;
-	var percentSub = 0;
-	// clear out any old subtitle
-	$('#subhead').text('');
+	    var percentName = 70;
+	    var percentSub = 0;
+	    // clear out any old subtitle
+	    $('#subhead').text('');
     }
+
+    var percentQR = 30;
 
     $('#main-text').css('width', percentName + '%');
     $('#subhead').css('width', percentSub + '%');
+    $('#qr-container').css('width', percentQR + '%');
 
     // get rid of the last destinations images
     $('.photo').remove();
@@ -378,11 +381,15 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 
     // set up the QR code and link
     if (dest.url != undefined) {
-        // two URLs because dest.url also contains the lifetime of the URL
+        // 0.28 stead of 0.3 for safety
+        var qrsize = Math.min(12*hu, $(window).width() * 0.28);
+
         $('#qrcode').html('').qrcode({
-          width: 12*hu,
-          height: 12*hu,
-          text: dest.url.url
+            width: 12*hu,
+            height: 12*hu,
+            // two URLs because dest.url also contains the lifetime of the
+            // URL
+            text: dest.url.url
         });
         $('#qrcode-text').text(dest.url.url).attr('href', dest.url.url);
     }
@@ -1382,7 +1389,7 @@ com.transitboard.hotel.prototype.updateWeather = function () {
 		    '4': 'weather-icons/storm-100px.png', // thunderstorms
 		    '5': 'weather-icons/snow-100px.png', // mixed rain and snow
 		    '6': 'weather-icons/snow-100px.png', // mixed rain and sleet
-		    '7': 'weather-icons/snow-100px.png', // mixed snow and sleet
+		    '7': 'weather-icons/snow-100px.png', // mixed snow and sleeti
 		    '8': 'weather-icons/snow-100px.png', // freezing drizzle
 		    '9': 'weather-icons/showers-100px.png', // drizzle
 		    '10': 'weather-icons/showers-100px.png', // freezing rain
