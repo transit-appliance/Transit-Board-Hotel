@@ -46,6 +46,8 @@
 	    src="Markdown.Sanitizer.js"></script>
     <script type="text/javascript"  
 	    src="html-sanitizer-minified.js"></script>
+    <script type="text/javascript"
+            src="jquery.qrcode.min.js"></script>
     <script src="tbdhotel.js" type="text/javascript"></script>
   </head>
   <body>
@@ -54,7 +56,11 @@
       <div id="head-box" class="box head-box">
 	<div id="main-text" class="main-text head"></div>
 	<div id="subhead" class="subhead dimmed"></div>
-	<div id="qrcode" class="qrcode"></div>
+    <div id="qr-container">
+	  <div id="qrcode" class="qrcode"></div>
+      <div class="clear"></div>
+      <a id="qrcode-text"></a>
+    </div>
 	<div class="clear"></div>
       </div>
       <div id="slideshow" class="slideshow">

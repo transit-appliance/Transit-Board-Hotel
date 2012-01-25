@@ -257,11 +257,11 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 	
 	    // wait 550 ms, then show the next slide
 	    setTimeout(function () {
-		iteration++;
-		if (iteration < instance.destinations.length) 
-		    instance.showDestination(iteration);
-		else 
-		    instance.showAttribution();
+		    iteration++;
+		    if (iteration < instance.destinations.length) 
+		        instance.showDestination(iteration);
+		    else 
+		        instance.showAttribution();
 	    }, 550);
 	}
     }
@@ -376,6 +376,17 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
 			    // TODO: i10n
 			    '<span class="trip-fare">$' + fare.toFixed(2) + ' USD each way</span></span>');
 
+    // set up the QR code and link
+    if (dest.url != undefined) {
+        // two URLs because dest.url also contains the lifetime of the URL
+        $('#qrcode').html('').qrcode({
+          width: 12*hu,
+          height: 12*hu,
+          text: dest.url.url
+        });
+        $('#qrcode-text').text(dest.url.url).attr('href', dest.url.url);
+    }
+
     var imageTimeout = 
 	1000 * Number(
 	    this.util.replaceNone(
@@ -447,14 +458,17 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     $('#container').fadeIn(500);
     
     // allow the subhead to slide over next to the head
-    $('#main-text').height(10*hu).textfill({maxFontPixels: 10*hu})
+    // TODO: prevent collisons between QR, URL and Subhead
+    $('#main-text').height(15*hu).textfill({maxFontPixels: 15*hu})
 	.css('width', $('#main-text span').width() + 'px');
-    $('#subhead').height(10*hu).textfill({maxFontPixels: 7*hu});
-    $('#head-box').height(10*hu);
+    $('#subhead').height(15*hu).textfill({maxFontPixels: 12*hu});
+    $('#head-box').height(15*hu);
+    $('#qrcode').height(12*hu).width(12*hu);
+    $('#qrcode-text').height(3*hu);
 
     $('.photo-attribution').css('font-size', 4*hu + 'px');
 
-    $('#slideshow').height(54*hu);
+    $('#slideshow').height(49*hu);
 
     var viewport = {x: $('#slideshow').width(), y: $('#slideshow').height()};
     // set the height of the li so that the next image is pushed down
@@ -615,7 +629,7 @@ com.transitboard.hotel.prototype.addAttribution = function (attr) {
  *
  * @returns {jQuery.Deferred} The first time it is called, the caller needs to know. The rest of the time, it is async.
  * @author mattwigway
-*/
+ */
 com.transitboard.hotel.prototype.updateTripPlans = function () {
     var instance = this;
     console.log('updating trip plans');
@@ -630,81 +644,132 @@ com.transitboard.hotel.prototype.updateTripPlans = function () {
     var rqs = [];
 
     $.each(localDests, function (ind, dest) {
-	// have to use 2 deferreds, one in the getTripPlan... fcn,
-	// b/c otherwise the callback on the $.when could be called
-	// before the last itinerary had been saved. There is no guarantee
-	// what order callbacks will be executed in, I don't believe
-	var tp = $.Deferred();
+	    // have to use 2 deferreds, one in the getTripPlan... fcn,
+	    // b/c otherwise the callback on the $.when could be called
+	    // before the last itinerary had been saved. There is no guarantee
+	    // what order callbacks will be executed in, I don't believe
+	    var tp = $.Deferred();
 
-	// returns a deferred, callback will save itinerary
-	var rq = instance.getTripPlanForDest(dest).then(function (itin) {
-	    localDests[ind].itinerary = itin;
-	    tp.resolve();
-	});
-	rqs.push(tp);
+	    // returns a deferred, callback will save itinerary
+	    var rq = instance.getTripPlanForDest(dest).then(function (itin) {
+	        localDests[ind].itinerary = itin;
+	        tp.resolve();
+	    });
+	    rqs.push(tp);
+
+        // make sure we don't give a stale one, get a new one if the
+        // old one is more than 3 hours old
+        if (dest.url == undefined || dest.url.creation <= new Date().getTime() - 3 * 60 * 60 * 1000) {
+            // get a short URL for the mobile app
+            var urlRq = instance.getShortURLForDest(dest).then(function (shortURL) {
+                if (url != null) {
+                    localDests[ind].url = {
+                        url: shortURL,
+                        creation: new Date().getTime()
+                    };
+                }
+                else {
+                    localDests[ind].url = undefined;
+                    console.log('could not get short URL for ' + dest.properties.name);
+                }
+            });
+            rqs.push(urlRq);
+        }
     });
 
     // when all the requests return, copy localDests to destinations
     $.when.apply(null, rqs).then(function () {
-	console.log('finished retrieving destinations');
-	instance.destinations = localDests;
+	    console.log('finished retrieving destinations');
+	    instance.destinations = localDests;
 
-	// check if any available
-	var found = false;
-	$.each(instance.destinations, function (ind, dest) {
-	    if (dest.itinerary != null) {
-		found = true;
-		return false; // no need to keep searching
+	    // check if any available
+	    var found = false;
+	    $.each(instance.destinations, function (ind, dest) {
+	        if (dest.itinerary != null) {
+		        found = true;
+		        return false; // no need to keep searching
+	        }
+	    });
+	    
+	    // if none available, show the slideshow
+	    if (!found) {
+	        if (instance.active) {
+ 		        instance.active = false;
+		        instance.doNoData();
+	        }
 	    }
-	});
-	
-	// if none available, show the slideshow
-	if (!found) {
-	    if (instance.active) {
- 		instance.active = false;
-		instance.doNoData();
+	    else {
+	        if (!instance.active) {
+		        // stop the slideshow
+		        instance.stopNoData();
+		        instance.active = true;
+		        instance.showDestination(0);
+	        }
 	    }
-	}
-	else {
-	    if (!instance.active) {
-		// stop the slideshow
-		instance.stopNoData();
-		instance.active = true;
-		instance.showDestination(0);
-	    }
-	}
 
-	// allow more requests to be made
-	// resolve false if no success
-	df.resolve(found);
-	
-	// TODO: this is in the wrong function . . .
-	// force the images to be cached
-	$.each(localDests, function (ind, dest) {
-	    for (var i = 1; i <= 4; i++) {
-		if (dest.properties['image' + i + '_url'] != null) {
-		    $('#cache-force-area').append(
-			'<img src="' + dest.properties['image' + i + '_url'] + '"/>'
-		    );
-		}
-	    }
-	});
+	    // allow more requests to be made
+	    // resolve false if no success
+	    df.resolve(found);
+	    
+	    // TODO: this is in the wrong function . . .
+	    // force the images to be cached
+	    $.each(localDests, function (ind, dest) {
+	        for (var i = 1; i <= 4; i++) {
+		        if (dest.properties['image' + i + '_url'] != null) {
+		            $('#cache-force-area').append(
+			            '<img src="' + dest.properties['image' + i + '_url'] + '"/>'
+		            );
+		        }
+	        }
+	    });
     });
 
     // if, after 30 seconds, some of the deferreds still have not resolved, resolve them as null (itinerary not found)
     // and log it to the console
     setTimeout(function () {
-	$.each(rqs, function (ind, rq) {
-	    if (!rq.isResolved()) {
-		console.log('timeout on request ' + ind); // TODO: destination name?
-		rq.resolve(null);
-	    }
-	});
+	    $.each(rqs, function (ind, rq) {
+	        if (!rq.isResolved()) {
+		        console.log('timeout on request ' + ind); // TODO: destination name?
+		        rq.resolve(null);
+	        }
+	    });
     }, 30000);
     
     return df;
 }
 
+/**
+ * This function gets a short URL for a destination. For now it uses
+ * tbdhm.herokuapp.com mobile app.
+ * @param {object} destination The destination.
+ * @returns {jQuery.Deferred} will be resolved with the URL or null if
+ * there was an error.
+ * @author mattwigway
+*/
+com.transitboard.hotel.prototype.getShortURLForDest = function(dest) {
+    var instance = this;
+    var df = new $.Deferred();
+    $.ajax({
+        url: 'http://tbdhm.herokuapp.com/new',
+        data: {
+            fromCoord: instance.realTimeArrivals.optionsConfig.origin[0],
+            fromPlace: instance.realTimeArrivals.optionsConfig.originName[0],
+            toCoord: dest.geometry.coordinates[1] + ',' + dest.geometry.coordinates[2],
+            toPlace: dest.properties.name
+        },
+        dataType: 'text',
+        success: function (data) {
+            // slice to get rid of \n
+            df.resolve('http://tbdhm.herokuapp.com/' + data.slice(0, -1));
+        },
+        fail: function (data) {
+            console.log('failure getting short url!');
+            df.resolve(null);
+        }
+    });
+    return df;
+};
+        
 /**
  * This function handles getting trip plans for a destination
  * @param {object} dest The destination to fetch data for.
@@ -1298,9 +1363,9 @@ com.transitboard.hotel.prototype.updateWeather = function () {
 		for (var p in data.query.results.channel.item.condition) {
 		    instance.weather.condition[p] = instance.util.sanitize(data.query.results.channel.item.condition[p]);
 		}
-		var text = instance.weather.condition.temp + '&deg; F/' +
+		var text = instance.weather.condition.temp + '&deg;&nbsp;F/' +
 		    Math.round((Number(instance.weather.condition.temp) - 32) * (5/9)) +
-		    '&deg; C';
+		    '&deg;&nbsp;C';
 		$('#bar-temp span').html(text);
 		$('#bar-temp').textfill({
 		    maxFontPixels: $('#bar').height()
