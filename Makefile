@@ -25,3 +25,12 @@ compile : tbdhotel.js tbdhotel.html
 		--js tbdhotel.js \
 	    --js_output_file tbdhotel.min.js
 	node build.js
+
+distribution:
+	zip -r 	transit-board-hotel-`git log --pretty=format:'%h' -n 1`.zip \
+		tbdhotel.min.html \
+		tbdhotel.min.js \
+		tbdhotel.css \
+		leaflet-js/leaflet.css \
+		leaflet-js/images/ \ 
+		hosted_images/
