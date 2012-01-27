@@ -32,5 +32,12 @@ distribution:
 		tbdhotel.min.js \
 		tbdhotel.css \
 		leaflet-js/leaflet.css \
-		leaflet-js/images/ \ 
-		hosted_images/
+		leaflet-js/images/ \
+		hosted_images/ \
+		assets/tz/northamerica \
+		assets/js/trArrAgencyTriMet.js \
+		assets/js/trArrServiceTriMet.js \
+		slideshows/*.md \
+		styles/*.css \
+		weather-icons/*.png \
+		gis/trimetTiles/ 
