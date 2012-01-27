@@ -391,7 +391,9 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
             // URL
             text: dest.url.url
         });
-        $('#qrcode-text').text(dest.url.url).attr('href', dest.url.url);
+        $('#qrcode-text').html('<span>' + dest.url.url + '</span>')
+            .attr('href', dest.url.url)
+            .textfill();
     }
 
     var imageTimeout = 
@@ -765,7 +767,8 @@ com.transitboard.hotel.prototype.getShortURLForDest = function(dest) {
             toPlace: dest.properties.name
         },
         dataType: 'text',
-        success: function (data) {
+        success: function (rawdata) {
+            var data = instance.util.sanitize(rawdata);
             // slice to get rid of \n
             df.resolve('http://tsrf.us/m/' + data.slice(0, -1));
         },

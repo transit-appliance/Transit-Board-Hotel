@@ -57,12 +57,15 @@
 	    <div id="main-text" class="main-text head"></div>
 	    <div id="subhead" class="subhead dimmed"></div>
         <div id="qr-container">
-	      <div id="qrcode" class="qrcode"></div>
-          <div class="clear"></div>
-          <a id="qrcode-text"></a>
-          <div class="clear"></div>
+          <!-- these seemingly spurious divs are used to force
+          wrapping of floats -->
+          <div>
+	        <div id="qrcode" class="qrcode"></div>
+          </div>
+          <div>
+            <a id="qrcode-text"></a>
+          </div>
         </div>
-	    <div class="clear"></div>
       </div>
       <div id="slideshow" class="slideshow">
 	    <ul>
