@@ -1,6 +1,6 @@
 CLOSURE=java -jar ~/bin/compiler.jar
 
-all : apidocs
+all : apidocs compile distribution
 
 apidocs : tbdhotel.js
 	jsdoc tbdhotel.js -d=apidocs
@@ -26,7 +26,7 @@ compile : tbdhotel.js tbdhotel.html
 	    --js_output_file tbdhotel.min.js
 	node build.js
 
-distribution:
+distribution: compile
 	zip -r 	transit-board-hotel-`git log --pretty=format:'%h' -n 1`.zip \
 		tbdhotel.min.html \
 		tbdhotel.min.js \
