@@ -767,7 +767,7 @@ com.transitboard.hotel.prototype.getShortURLForDest = function(dest) {
         dataType: 'text',
         success: function (data) {
             // slice to get rid of \n
-            df.resolve('http://tbdhm.herokuapp.com/' + data.slice(0, -1));
+            df.resolve('http://tsrf.us/m/' + data.slice(0, -1));
         },
         fail: function (data) {
             console.log('failure getting short url!');
@@ -1573,3 +1573,4 @@ $(document).ready(function () {
 	}
     });
 });
+
