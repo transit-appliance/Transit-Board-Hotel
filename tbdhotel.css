@@ -16,11 +16,13 @@
 
 body { font-family: Helvetica, sans; padding: 0; margin: 0; border: 0; 
        cursor: none}
-.head-box { padding-right: 5px; padding-top: 5px }
+.head-box { padding-right: 5px; padding-top: 5px; overflow: hidden }
+.head-box div { overflow: hidden }
 .head { font-size: 64pt; float: left}
 .subhead { font-size: 28pt; float: left; text-transform: lowercase;
 	   vertical-align: bottom; padding-left: 5px}
-#qr-container { float: right; }
+/* use overflow:hidden rather than a clearing div since floats are nested */
+#qr-container { float: right; overflow: hidden }
 
 /* align right so they aren't jumping about */
 #qrcode, #qrcode-text { float: right }
