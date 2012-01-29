@@ -9,7 +9,7 @@
 	*/
 	$.fn.textfill = function(options) {
 		var defaults = {
-			maxFontPixels: 40,
+			maxFontPixels: 256,
 			innerTag: 'span'
 		};
 		var Opts = jQuery.extend(defaults, options);
