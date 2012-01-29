@@ -1,18 +1,18 @@
 <html>
   <!--
-   Copyright 2011-2012 Portland Transport
+      Copyright 2011-2012 Portland Transport
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+      Licensed under the Apache License, Version 2.0 (the "License");
+      you may not use this file except in compliance with the License.
+      You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      See the License for the specific language governing permissions and
+      limitations under the License.
     -->
   <head>
     <title>Transit Board Hotel</title>
@@ -41,32 +41,38 @@
     <!-- initially hidden -->
     <div id="container" style="display: none;">
       <div id="head-box" class="box head-box">
-	<div id="main-text" class="main-text head"></div>
-	<div id="subhead" class="subhead dimmed"></div>
-    <div id="qr-container">
-	  <div id="qrcode" class="qrcode"></div>
-      <div class="clear"></div>
-      <a id="qrcode-text"></a>
-      <div class="clear"></div>
-    </div>
-	<div class="clear"></div>
+	    <div id="main-text" class="main-text head"></div>
+	    <div id="subhead" class="subhead dimmed"></div>
+        <div id="qr-container">
+          <!-- these seemingly spurious divs are used to force
+          wrapping of floats -->
+          <div>
+	        <div id="qrcode" class="qrcode"></div>
+          </div>
+          <div>
+            <a id="qrcode-text"></a>
+          </div>
+        </div>
+        <!-- force everything down, overflow:hiddden doesn't seem to
+        do this -->
+        <div class="clear"></div>
       </div>
       <div id="slideshow" class="slideshow">
-	<ul>
-	  <!-- slides will go in this order: image 1...image n, map 
-	       Leaflet doesn't seem to have an issue with being inside a
-	       relatively-sized div
-	    -->
-	  <li><div id="map" style="width: 100%; height: 100%;">
-	  </div></li>
-	</ul>
+	    <ul>
+	      <!-- slides will go in this order: image 1...image n, map 
+	           Leaflet doesn't seem to have an issue with being inside a
+	           relatively-sized div
+	        -->
+	      <li><div id="map" style="width: 100%; height: 100%;">
+	      </div></li>
+	    </ul>
       </div>
       <div id="trip-box" class="box trip-box">
-	<div id="narrative"><!-- e.g. 20 min trip; walk to Pioneer Square South
-			     MAX, take the Red Line towards Airport, offboard 
-			     at Cascades -->
-	</div>
-	<div id="trip-details" class="dimmed trip-details"></div>
+	    <div id="narrative"><!-- e.g. 20 min trip; walk to Pioneer Square South
+			                     MAX, take the Red Line towards Airport, offboard 
+			                     at Cascades -->
+	    </div>
+	    <div id="trip-details" class="dimmed trip-details"></div>
       </div>
     </div>
 
@@ -79,10 +85,10 @@
 
     <table id="bar" class="bar">
       <tr>
-	<td id="bar-icon" class="bar-icon"><img></td>
-	<td id="bar-temp" class="bar-temp"><span></span></td>
-	<td id="bar-location" class="bar-location"><span></span></td>
-	<td id="bar-datetime" class="bar-datetime"><span></span></td>
+	    <td id="bar-icon" class="bar-icon"><img></td>
+	    <td id="bar-temp" class="bar-temp"><span></span></td>
+	    <td id="bar-location" class="bar-location"><span></span></td>
+	    <td id="bar-datetime" class="bar-datetime"><span></span></td>
       </tr>
     </table>
 
