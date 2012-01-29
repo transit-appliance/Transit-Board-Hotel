@@ -209,9 +209,7 @@ com.transitboard.hotel.prototype.doDisplay = function () {
     var hu = $(window).height() / 100;
     $('#bar').height(6*hu);
     $('#bar-location span').text(this.realTimeArrivals.optionsConfig.originName[0]);
-    $('#bar-location').textfill({
-	    maxFontPixels: $('#bar').height()
-    });
+    $('#bar-location').textfill();
     // don't overzoom the image
     // we have to do this before inserting the image,
     // or it will force the bar large, then size to the forced size
@@ -468,10 +466,10 @@ com.transitboard.hotel.prototype.showDestination = function (iteration) {
     
     // allow the subhead to slide over next to the head
     // TODO: prevent collisons between QR, URL and Subhead
-    $('#main-text').height(15*hu).textfill({maxFontPixels: 15*hu})
-	    .css('width', $('#main-text span').width() + 'px');
-    $('#subhead').height(15*hu).textfill({maxFontPixels: 12*hu});
     $('#head-box').height(15*hu);
+    $('#main-text').height(15*hu).textfill()
+	    .css('width', $('#main-text span').width() + 'px');
+    $('#subhead').height(15*hu).textfill();
     $('#qrcode').height(12*hu).width(12*hu);
     $('#qrcode-text').height(3*hu);
 
@@ -1377,9 +1375,7 @@ com.transitboard.hotel.prototype.updateWeather = function () {
 		            Math.round((Number(instance.weather.condition.temp) - 32) * (5/9)) +
 		            '&deg;&nbsp;C';
 		        $('#bar-temp span').html(text);
-		        $('#bar-temp').textfill({
-		            maxFontPixels: $('#bar').height()
-		        });
+		        $('#bar-temp').textfill();
 
 		        // set the icons
 		        // these are all the Yahoo! condition codes, from
@@ -1471,7 +1467,7 @@ com.transitboard.hotel.prototype.updateClock = function () {
 	    mins + '&nbsp;' + ap;
 
     $('#bar-datetime span').html(time);
-    $('#bar-datetime').textfill({maxFontPixels: $('#bar').height() - 5});
+    $('#bar-datetime').textfill();
 }
 
 
